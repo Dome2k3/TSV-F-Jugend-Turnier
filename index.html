@@ -3,111 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnier-Planung 20.06.2026</title>
+    <title>F-Jugend Sommer-Cup 2026</title>
     <style>
         :root {
             --grass: #2ecc71;
-            --dark: #27ae60;
+            --dark-green: #27ae60;
             --text: #2c3e50;
             --alert: #e74c3c;
             --warn: #f39c12;
             --bg: #f0f2f5;
         }
         
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 50px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            padding-bottom: 60px; 
+        }
         
-        header { background: linear-gradient(135deg, var(--dark), var(--grass)); color: white; padding: 2rem 1rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        header h1 { margin: 0; font-size: 2rem; }
-        header .date { font-size: 1.2rem; background: rgba(255,255,255,0.2); display: inline-block; padding: 5px 15px; border-radius: 20px; margin-top: 10px; }
+        header { 
+            background: linear-gradient(135deg, var(--dark-green), var(--grass)); 
+            color: white; 
+            padding: 2rem 1rem; 
+            text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+        header h1 { margin: 0; font-size: 2.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        header .date-badge { 
+            background: rgba(255,255,255,0.25); 
+            padding: 5px 15px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            display: inline-block; 
+            margin-top: 10px;
+        }
 
         .container { max-width: 900px; margin: 0 auto; padding: 20px; }
         
-        .card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { border-bottom: 3px solid var(--grass); padding-bottom: 10px; margin-top: 0; color: var(--dark); }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            border-top: 5px solid transparent;
+        }
 
-        /* Status Grid */
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        .shift-block { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-        .shift-header { background: #eee; padding: 10px; font-weight: bold; text-align: center; border-bottom: 1px solid #ddd; }
-        .shift-header.s1 { background: #d4e6f1; color: #2980b9; }
-        .shift-header.s2 { background: #fdebd0; color: #d35400; }
+        h2 { 
+            border-bottom: 3px solid var(--grass); 
+            padding-bottom: 10px; 
+            margin-top: 0; 
+            color: var(--dark-green); 
+            font-size: 1.4rem;
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .shift-block { border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background: #fff; }
+        .shift-header { padding: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #eee; }
+        .s1-header { background: #e8f6f3; color: #16a085; }
+        .s2-header { background: #fef5e7; color: #d35400; }
         
-        .slot-row { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; align-items: center; }
+        .slot-row { 
+            padding: 10px 12px; 
+            border-bottom: 1px solid #f5f5f5; 
+            font-size: 0.95rem; 
+        }
         .slot-row:last-child { border-bottom: none; }
-        .slot-open { color: var(--alert); font-weight: bold; background: #fadbd8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
-        .slot-full { color: var(--dark); background: #d5f5e3; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
-        .helper-name { font-size: 0.85rem; color: #7f8c8d; display: block; }
-
-        /* Form */
-        label { display: block; margin-bottom: 5px; font-weight: bold; margin-top: 15px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        button.btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; font-size: 1.2rem; cursor: pointer; margin-top: 20px; font-weight: bold; }
-        button.btn-main:hover { background: #1e8449; }
-
-        /* Checklist */
-        .task-list { list-style: none; padding: 0; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
-        .task-item.done { opacity: 0.6; background: #f9f9f9; }
-        .task-action { display: flex; gap: 10px; align-items: center; }
-        .task-doer { font-weight: bold; color: var(--dark); }
-        .btn-small { padding: 5px 10px; background: var(--warn); color: white; border: none; border-radius: 4px; cursor: pointer; }
         
-        /* Loading & Messages */
-        #loader { text-align: center; padding: 20px; color: #7f8c8d; }
-        .msg { padding: 15px; border-radius: 6px; margin-top: 10px; display: none; text-align: center; }
-        .msg.success { background: #d4edda; color: #155724; }
+        .role-title { font-weight: bold; display: block; margin-bottom: 4px; }
+        
+        .helper-entry { 
+            display: block; 
+            font-size: 0.85rem; 
+            color: #555; 
+            padding-left: 15px;
+            position: relative;
+        }
+        .helper-entry::before { content: "⚽"; position: absolute; left: 0; font-size: 0.7rem; top: 2px; }
 
-        @media (max-width: 600px) {
+        .badge-open { 
+            display: inline-block;
+            background: #fadbd8; 
+            color: #c0392b; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .badge-full { 
+            display: inline-block;
+            background: #d4efdf; 
+            color: #27ae60; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.8rem; 
+            margin-top: 5px;
+        }
+
+        /* --- FORM STYLES --- */
+        label { display: block; margin-bottom: 5px; font-weight: bold; margin-top: 15px; color: #444; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            box-sizing: border-box; 
+            background: #fafafa;
+        }
+        input:focus, select:focus { border-color: var(--grass); outline: none; background: #fff; }
+        
+        button.btn-main { 
+            width: 100%; 
+            padding: 15px; 
+            background: var(--dark-green); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            margin-top: 25px; 
+            font-weight: bold; 
+            transition: background 0.2s;
+        }
+        button.btn-main:hover { background: #1e8449; }
+        button.btn-main:disabled { background: #95a5a6; cursor: wait; }
+
+        /* --- TIMELINE STYLES --- */
+        .timeline-item { display: flex; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .timeline-item:last-child { border-bottom: none; }
+        .time { 
+            min-width: 90px; 
+            font-weight: bold; 
+            color: var(--dark-green); 
+            font-size: 0.95rem; 
+        }
+        .desc { font-size: 0.95rem; line-height: 1.4; }
+        .highlight-bg { background-color: #f9f9f9; border-radius: 5px; padding: 5px; }
+
+        /* --- CHECKLIST STYLES --- */
+        .checklist-container {
+            max-height: 400px; 
+            overflow-y: auto; 
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .task-list { list-style: none; padding: 0; margin: 0; }
+        .task-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px; 
+            border-bottom: 1px solid #eee; 
+            background: white;
+        }
+        .task-header {
+            background-color: #e8f8f5;
+            color: var(--text);
+            font-weight: bold;
+            padding: 8px;
+            text-align: center;
+            border-bottom: 2px solid var(--grass);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .task-doer { font-weight: bold; color: var(--dark-green); font-size: 0.9rem; }
+        .task-action input { width: 110px; padding: 6px; font-size: 0.9rem; margin-right: 5px; }
+        .btn-small { 
+            padding: 6px 12px; 
+            background: var(--warn); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        
+        /* --- UTILS --- */
+        .msg { padding: 15px; border-radius: 6px; margin-top: 10px; display: none; text-align: center; }
+        .msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .loader { text-align: center; padding: 20px; color: #7f8c8d; font-style: italic; }
+
+        @media (max-width: 650px) {
             .status-grid { grid-template-columns: 1fr; }
+            .task-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .task-action { width: 100%; display: flex; }
+            .task-action input { flex-grow: 1; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>⚽ Sommer-Turnier Orga</h1>
-    <div class="date">Samstag, 20.06.2026</div>
+    <h1>⚽ Sommer-Cup</h1>
+    <div class="date-badge">Samstag, 20.06.2026</div>
 </header>
 
 <div class="container">
 
-    <div class="card">
+    <div class="card" style="border-top-color: var(--dark-green);">
         <h2>📊 Schicht-Übersicht</h2>
-        <div id="loader">Lade aktuelle Belegung...</div>
+        <div id="loader" class="loader">Lade Daten aus der Zentrale...</div>
         
         <div class="status-grid" id="status-container" style="display:none;">
             <div class="shift-block">
-                <div class="shift-header s1">Schicht 1<br><small>08:45 - 11:30 Uhr</small></div>
+                <div class="shift-header s1-header">
+                    SCHICHT 1<br>
+                    <small>08:45 - 11:30 Uhr (Aufbau & Start)</small>
+                </div>
                 <div id="s1-content"></div>
             </div>
             
             <div class="shift-block">
-                <div class="shift-header s2">Schicht 2<br><small>11:00 - 14:00 Uhr</small></div>
+                <div class="shift-header s2-header">
+                    SCHICHT 2<br>
+                    <small>11:00 - 14:00+ Uhr (Finale & Abbau)</small>
+                </div>
                 <div id="s2-content"></div>
             </div>
         </div>
-        <p style="text-align:center; margin-top:15px; font-size:0.9rem; color:#777;">
-            Wir brauchen pro Schicht: 1x Leitung, 2x Grill, 4x Verkauf, 1x Springer.
+        
+        <p style="text-align:center; font-size:0.85rem; color:#888; margin-top:15px;">
+            Wir benötigen pro Schicht: 1x Leitung, 2x Grill, 4x Verkauf, 1x Springer.
         </p>
     </div>
 
-    <div class="card" style="border-left: 5px solid #e67e22;">
-        <h2>📝 Hier als Helfer eintragen</h2>
+    <div class="card" style="border-top-color: #e67e22;">
+        <h2>📝 Helfer eintragen</h2>
+        <p>Bitte trage dich hier ein. Deine Daten erscheinen sofort oben in der Übersicht.</p>
+        
         <form id="volunteer-form">
             <label>Dein Name</label>
             <input type="text" name="name" placeholder="Vorname Nachname" required>
             
-            <label>Name des Kindes</label>
-            <input type="text" name="kind" placeholder="Dein Kind" required>
+            <label>Name des Kindes (F-Jugend)</label>
+            <input type="text" name="kind" placeholder="Wer spielt mit?" required>
 
-            <label>E-Mail Adresse</label>
-            <input type="email" name="email" placeholder="Für Infos" required>
+            <label>E-Mail Adresse (für Infos)</label>
+            <input type="email" name="email" placeholder="beispiel@email.de" required>
 
-            <label>Wähle deine Schicht</label>
+            <label>Schicht wählen</label>
             <select name="schicht" required>
                 <option value="" disabled selected>-- Bitte wählen --</option>
-                <option value="1">Schicht 1 (08:45 - 11:30)</option>
-                <option value="2">Schicht 2 (11:00 - 14:00)</option>
+                <option value="1">Schicht 1 (08:45 - 11:30 Uhr)</option>
+                <option value="2">Schicht 2 (11:00 - 14:00 Uhr + Ausklang)</option>
             </select>
 
             <label>Wunsch-Position</label>
@@ -115,44 +259,116 @@
                 <option value="" disabled selected>-- Wo möchtest du helfen? --</option>
                 <option value="Verkauf">Verkauf & Theke (4 Pers.)</option>
                 <option value="Grill">Grillmeister (2 Pers.)</option>
-                <option value="Turnierleitung">Turnierleitung (2 Pers.)</option>
+                <option value="Turnierleitung">Turnierleitung (1 Pers.)</option>
                 <option value="Springer">Springer / Küche (1 Pers.)</option>
             </select>
 
-            <button type="submit" class="btn-main" id="submit-btn">Eintragen</button>
+            <button type="submit" class="btn-main" id="submit-btn">Jetzt eintragen</button>
             <div class="msg" id="form-msg"></div>
         </form>
     </div>
 
-    <div class="card">
-        <h2>🛒 Einkaufs- & Orga-Liste</h2>
-        <p>Hier sind Dinge, die vor dem Turnier erledigt werden müssen. Trage deinen Namen ein, wenn du das übernimmst.</p>
-        <ul class="task-list" id="task-container">
+    <div class="card" style="border-top-color: #3498db;">
+        <h2>⏰ Der Tagesablauf</h2>
+        
+        <div class="timeline-item">
+            <div class="time">08:45 - 09:30</div>
+            <div class="desc">
+                <strong>Aufbau & Vorbereitung (Schicht 1)</strong><br>
+                Technik Check, Platz abkreiden, Grill aufstellen. <br>
+                <em>Küche:</em> Brötchen schmieren, Kaffee kochen!
+            </div>
+        </div>
+        
+        <div class="timeline-item highlight-bg">
+            <div class="time">09:30 - 10:00</div>
+            <div class="desc">
+                <strong>Ankunft der Teams</strong><br>
+                Begrüßung Trainer. 1. Kaffee-Verkauf läuft an.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="time">10:00</div>
+            <div class="desc"><strong>⚽ Anpfiff Turnier</strong> (Turnierhälfte 1)</div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="time">10:30</div>
+            <div class="desc">Grill anfeuern! (Erste Wurst um 11:00 fertig)</div>
+        </div>
+
+        <div class="timeline-item highlight-bg">
+            <div class="time">11:00 - 11:30</div>
+            <div class="desc">
+                <strong>🔄 Heiße Phase & Übergabe</strong><br>
+                Schicht 2 trifft ein. Gemeinsam den Mittagsansturm bewältigen.<br>
+                Übergabe Kasse & Grillzange. Schicht 1 hat danach Feierabend.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="time">11:30 - 13:30</div>
+            <div class="desc">
+                <strong>Hauptbetrieb (Schicht 2)</strong><br>
+                Ab 12:30 Eisverkauf per Durchsage anpreisen.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="time">14:00 - 14:30</div>
+            <div class="desc">
+                <strong>🏆 Siegerehrung & Ende</strong><br>
+                Medaillen für alle. Catering schließt.
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="time">Ab 14:30</div>
+            <div class="desc">
+                <strong>Abbau & Gemütlicher Ausklang</strong><br>
+                Müll sammeln, Technik abbauen.<br>
+                <em>Highlight:</em> Reste-Grillen & Bierchen für alle Helfer!
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-top-color: #9b59b6;">
+        <h2>🛒 Aufgaben & Material</h2>
+        <p>Wer besorgt was? Wer kümmert sich um die Technik? Bitte eintragen!</p>
+        
+        <div class="checklist-container">
+            <ul class="task-list" id="task-container">
+                <li style="padding:20px; text-align:center;">Lade Liste...</li>
             </ul>
+        </div>
     </div>
 
 </div>
 
-<script>
-    // ==========================================
-    // DEINE URL HIER EINFÜGEN:
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec'; 
-    // ==========================================
+<footer>
+    <p style="text-align: center; color: #95a5a6; padding: 20px; font-size: 0.8rem;">
+        &copy; 2026 F-Jugend Orga Team
+    </p>
+</footer>
 
-    // Soll-Stärke pro Schicht
+<script>
+    // DEINE API URL (fest hinterlegt)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
+
+    // Konfiguration der Soll-Stärken
     const TARGETS = {
-        'Turnierleitung': 2,
+        'Turnierleitung': 1,
         'Grill': 2,
         'Verkauf': 4,
         'Springer': 1
     };
 
-    // Initial Laden
+    // Start
     loadAllData();
 
+    // --- FUNKTION: DATEN LADEN ---
     async function loadAllData() {
-        if(API_URL.includes('HIER_DEINE')) return;
-        
         try {
             const res = await fetch(API_URL);
             const json = await res.json();
@@ -165,39 +381,39 @@
             }
         } catch (e) {
             console.error(e);
-            document.getElementById('loader').innerText = "Fehler beim Laden.";
+            document.getElementById('loader').innerText = "Fehler: Konnte Daten nicht laden. Bitte Seite neu laden.";
         }
     }
 
+    // --- FUNKTION: DASHBOARD RENDERN ---
     function renderDashboard(helpers) {
-        // Hilfsfunktion um Slots zu bauen
         const buildSlots = (shiftNum, containerId) => {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             
-            // Für jede Position (Grill, Verkauf...)
             for (const [role, targetCount] of Object.entries(TARGETS)) {
-                // Wer hat sich angemeldet?
+                // Wer ist eingetragen?
                 const signedUp = helpers.filter(h => h.schicht == shiftNum && h.aufgabe == role);
                 const count = signedUp.length;
                 
                 let html = `<div class="slot-row">
-                    <div><strong>${role}</strong>`;
+                    <span class="role-title">${role}</span>`;
                 
-                // Namen anzeigen
+                // Namen auflisten
                 if(count > 0) {
                     signedUp.forEach(p => {
-                        html += `<span class="helper-name">✅ ${p.name} (${p.kind})</span>`;
+                        html += `<span class="helper-entry">${p.name} <small>(${p.kind})</small></span>`;
                     });
+                } else {
+                    html += `<span style="font-size:0.8rem; color:#aaa; font-style:italic;">Noch niemand eingetragen</span>`;
                 }
-                html += `</div>`;
 
                 // Status Badge
                 const needed = targetCount - count;
                 if(needed > 0) {
-                    html += `<div class="slot-open">${needed} offen</div>`;
+                    html += `<br><span class="badge-open">${needed} offen</span>`;
                 } else {
-                    html += `<div class="slot-full">Voll</div>`;
+                    html += `<br><span class="badge-full">Voll besetzt ✅</span>`;
                 }
                 
                 html += `</div>`;
@@ -209,33 +425,47 @@
         buildSlots(2, 's2-content');
     }
 
+    // --- FUNKTION: CHECKLISTE RENDERN ---
     function renderChecklist(tasks) {
-        const list = document.getElementById('task-container');
-        list.innerHTML = '';
+        const listContainer = document.getElementById('task-container');
+        listContainer.innerHTML = '';
 
         tasks.forEach(task => {
+            // Ist es eine Überschrift? (Fängt mit --- an)
+            if (task.item.startsWith('---')) {
+                const header = document.createElement('div');
+                header.className = 'task-header';
+                header.innerText = task.item.replace(/---/g, '').trim();
+                listContainer.appendChild(header);
+                return;
+            }
+
             const li = document.createElement('li');
             li.className = 'task-item';
-            if(task.wer) li.classList.add('done');
 
-            let actionHtml = '';
             if(task.wer) {
-                actionHtml = `<span class="task-doer">✅ ${task.wer}</span>`;
+                // Erledigt
+                li.style.backgroundColor = "#f0fff4";
+                li.innerHTML = `
+                    <span style="opacity:0.6; text-decoration:line-through;">${task.item}</span> 
+                    <span class="task-doer">✅ ${task.wer}</span>
+                `;
             } else {
-                actionHtml = `
+                // Offen
+                const safeId = 'claim-' + task.item.replace(/[^a-zA-Z0-9]/g, '');
+                li.innerHTML = `
+                    <span>${task.item}</span> 
                     <div class="task-action">
-                        <input type="text" placeholder="Dein Name" id="claim-${task.item.replace(/\s/g,'')}" style="padding:5px; width:120px;">
-                        <button class="btn-small" onclick="claimTask('${task.item}', 'claim-${task.item.replace(/\s/g,'')}')">Übernehmen</button>
+                        <input type="text" placeholder="Dein Name" id="${safeId}">
+                        <button class="btn-small" onclick="claimTask('${task.item}', '${safeId}')">Ich mach's</button>
                     </div>
                 `;
             }
-
-            li.innerHTML = `<span>${task.item}</span> ${actionHtml}`;
-            list.appendChild(li);
+            listContainer.appendChild(li);
         });
     }
 
-    // FORMULAR ABSENDEN (HELFER)
+    // --- FUNKTION: HELFER EINTRAGEN (FORM) ---
     document.getElementById('volunteer-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submit-btn');
@@ -243,6 +473,7 @@
         
         btn.disabled = true;
         btn.innerText = "Speichere...";
+        msg.style.display = 'none';
 
         const formData = new FormData(e.target);
         const data = new URLSearchParams();
@@ -251,38 +482,48 @@
 
         try {
             await fetch(API_URL, { method: 'POST', body: data });
-            msg.innerText = "✅ Super, danke! Du bist eingetragen.";
+            msg.innerText = "✅ Super, du bist eingetragen! Seite lädt neu...";
             msg.className = "msg success";
             msg.style.display = "block";
-            e.target.reset();
-            loadAllData(); // Aktualisieren
+            
+            // Kurze Pause, dann Daten neu laden
+            setTimeout(() => {
+                e.target.reset();
+                btn.disabled = false;
+                btn.innerText = "Jetzt eintragen";
+                loadAllData();
+            }, 1500);
+            
         } catch (err) {
-            alert("Fehler beim Speichern");
+            alert("Fehler beim Speichern. Bitte Internetverbindung prüfen.");
+            btn.disabled = false;
+            btn.innerText = "Jetzt eintragen";
         }
-        btn.disabled = false;
-        btn.innerText = "Eintragen";
     });
 
-    // AUFGABE ÜBERNEHMEN
+    // --- FUNKTION: AUFGABE ÜBERNEHMEN ---
     async function claimTask(itemName, inputId) {
         const nameInput = document.getElementById(inputId);
         const name = nameInput.value;
-        if(!name) { alert("Bitte Namen eingeben"); return; }
+        if(!name) { alert("Bitte gib deinen Namen ein."); return; }
+
+        const btn = nameInput.nextElementSibling;
+        const originalText = btn.innerText;
+        btn.innerText = "⏳";
+        btn.disabled = true;
 
         const data = new URLSearchParams();
         data.append('action', 'claim_task');
         data.append('taskName', itemName);
         data.append('personName', name);
 
-        // UI sofort updaten (optimistisch)
-        nameInput.parentElement.innerHTML = "⏳ Speichere...";
-
         try {
             await fetch(API_URL, { method: 'POST', body: data });
             loadAllData(); // Alles neu laden
         } catch (err) {
-            alert("Fehler.");
-            loadAllData();
+            alert("Fehler beim Speichern.");
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
     }
 </script>
