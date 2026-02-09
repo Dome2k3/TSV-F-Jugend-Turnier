@@ -97,8 +97,8 @@
             <label>Dein Name</label>
             <input type="text" name="name" placeholder="Vorname Nachname" required>
             
-            <label>Name des Kindes (F-Jugend)</label>
-            <input type="text" name="kind" placeholder="Wer spielt mit?" required>
+            <label>Name des Kindes</label>
+            <input type="text" name="kind" placeholder="Dein Kind" required>
 
             <label>E-Mail Adresse</label>
             <input type="email" name="email" placeholder="Für Infos" required>
@@ -115,7 +115,7 @@
                 <option value="" disabled selected>-- Wo möchtest du helfen? --</option>
                 <option value="Verkauf">Verkauf & Theke (4 Pers.)</option>
                 <option value="Grill">Grillmeister (2 Pers.)</option>
-                <option value="Turnierleitung">Turnierleitung (1 Pers.)</option>
+                <option value="Turnierleitung">Turnierleitung (2 Pers.)</option>
                 <option value="Springer">Springer / Küche (1 Pers.)</option>
             </select>
 
@@ -141,7 +141,7 @@
 
     // Soll-Stärke pro Schicht
     const TARGETS = {
-        'Turnierleitung': 1,
+        'Turnierleitung': 2,
         'Grill': 2,
         'Verkauf': 4,
         'Springer': 1
