@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F-Jugend Turnier Orga</title>
+    <style>
+        :root {
+            --grass-green: #2ecc71;
+            --dark-green: #27ae60;
+            --text-dark: #2c3e50;
+            --alert-red: #e74c3c;
+            --light-bg: #f4f7f6;
+        }
+        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--light-bg); color: var(--text-dark); }
+        
+        header { background: linear-gradient(135deg, var(--dark-green), var(--grass-green)); color: white; padding: 2rem 1rem; text-align: center; }
+        header h1 { margin: 0; }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--grass-green); }
+        
+        h2 { border-bottom: 2px solid var(--grass-green); padding-bottom: 10px; margin-top: 0; }
+
+        /* Formular Styles */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        button#submit-btn {
+            width: 100%; padding: 15px; background: var(--dark-green); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; transition: background 0.3s;
+        }
+        button#submit-btn:hover { background: #1e8449; }
+        button#submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+
+        /* Liste der Helfer */
+        #helper-list { list-style: none; padding: 0; }
+        .helper-item { background: #f9f9f9; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .helper-badge { background: var(--grass-green); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 10px; }
+        .badge-schicht1 { background: #3498db; }
+        .badge-schicht2 { background: #e67e22; }
+
+        /* Status Meldungen */
+        #status-message { margin-top: 10px; padding: 10px; border-radius: 6px; display: none; text-align: center; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+
+        /* Checkbox Styles (Einkauf) */
+        .checkbox-wrapper { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
+        .checkbox-wrapper input { width: auto; margin-right: 10px; transform: scale(1.3); }
+        .checkbox-wrapper input:checked + span { text-decoration: line-through; color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚽ Turnier-Helfer & Orga</h1>
+    <p>16 Teams | 200 Gäste | 18 Helfer gesucht</p>
+</header>
+
+<div class="container">
+
+    <div class="card" style="border-left-color: #e67e22;">
+        <h2>📝 Hier als Helfer eintragen</h2>
+        <p>Bitte trag dich ein. Die Daten landen direkt in unserer Liste.</p>
+        
+        <form id="volunteer-form">
+            <div class="form-group">
+                <label for="name">Dein Name</label>
+                <input type="text" id="name" name="name" placeholder="Vorname Nachname" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-Mail Adresse (wird nicht öffentlich angezeigt)</label>
+                <input type="email" id="email" name="email" placeholder="max@beispiel.de" required>
+            </div>
+
+            <div class="form-group">
+                <label for="schicht">Wähle deine Schicht</label>
+                <select id="schicht" name="schicht" required>
+                    <option value="" disabled selected>-- Bitte wählen --</option>
+                    <option value="1">Schicht 1: Aufbau & Turnierstart (08:30 - 12:15)</option>
+                    <option value="2">Schicht 2: Finale & Abbau (12:15 - 15:45)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="aufgabe">Wunsch-Position</label>
+                <select id="aufgabe" name="aufgabe" required>
+                    <option value="" disabled selected>-- Bitte wählen --</option>
+                    <option value="Verkauf/Theke">Verkauf & Theke (Allrounder)</option>
+                    <option value="Grill">Grillmeister</option>
+                    <option value="Turnierleitung">Turnierleitung (Sprecher/PC)</option>
+                    <option value="Springer">Springer (Küche/Nachschub)</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submit-btn">Jetzt eintragen</button>
+            <div id="status-message"></div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>👥 Wer ist schon dabei?</h2>
+        <p>Aktuelle Anmeldungen (Echtzeit aus Google Sheets):</p>
+        <ul id="helper-list">
+            <li style="text-align:center; color: #999;">Lade Daten...</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>🛒 Einkaufs-Checkliste (Nur für dich)</h2>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="item1"><span>Metzger: 200 Würstchen</span></label></div>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="item2"><span>Bäcker: 250 Brötchen</span></label></div>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="item3"><span>Langnese Outlet: 120 Eis</span></label></div>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="item4"><span>Getränke (Wasser, Schorle, Soft, Bier)</span></label></div>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="item5"><span>Wechselgeld (150€)</span></label></div>
+        <div class="checkbox-wrapper"><label><input type="checkbox" id="tech1"><span>Mikrofon & Musik-Box testen</span></label></div>
+    </div>
+
+</div>
+
+<script>
+    // ==========================================
+    // KONFIGURATION
+    // ==========================================
+    // FÜGE HIER DEINE GOOGLE APPS SCRIPT URL EIN:
+    const SCRIPT_URL = 'HIER_DEINE_WEB_APP_URL_EINFÜGEN'; 
+    // ==========================================
+
+    const form = document.getElementById('volunteer-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusMsg = document.getElementById('status-message');
+    const listContainer = document.getElementById('helper-list');
+
+    // 1. Daten beim Laden abrufen (GET)
+    async function loadHelpers() {
+        if(SCRIPT_URL === 'HIER_DEINE_WEB_APP_URL_EINFÜGEN') {
+            listContainer.innerHTML = '<li style="color:red;">⚠️ Bitte Script-URL im Code eintragen!</li>';
+            return;
+        }
+
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const json = await response.json();
+            
+            if (json.result === 'success') {
+                renderList(json.data);
+            } else {
+                console.error('Fehler beim Laden:', json);
+            }
+        } catch (error) {
+            listContainer.innerHTML = '<li>Konnte Daten nicht laden.</li>';
+        }
+    }
+
+    function renderList(data) {
+        listContainer.innerHTML = '';
+        if (data.length === 0) {
+            listContainer.innerHTML = '<li>Noch keine Helfer eingetragen.</li>';
+            return;
+        }
+        
+        // Sortieren nach Schicht
+        data.sort((a, b) => a.schicht - b.schicht);
+
+        data.forEach(person => {
+            const li = document.createElement('li');
+            li.className = 'helper-item';
+            
+            const badgeClass = person.schicht == 1 ? 'badge-schicht1' : 'badge-schicht2';
+            
+            li.innerHTML = `
+                <div><strong>${person.name}</strong> <small>(${person.aufgabe})</small></div>
+                <div><span class="helper-badge ${badgeClass}">Schicht ${person.schicht}</span></div>
+            `;
+            listContainer.appendChild(li);
+        });
+    }
+
+    // 2. Daten senden (POST)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if(SCRIPT_URL.includes('HIER_DEINE')) {
+            alert("Bitte erst die Script URL im HTML Code hinterlegen!");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Wird gesendet...";
+        statusMsg.style.display = 'none';
+
+        // Daten sammeln
+        const formData = new FormData(form);
+        const data = new URLSearchParams();
+        data.append('action', 'insert'); // Wichtig für unser Script
+        for (const pair of formData) {
+            data.append(pair[0], pair[1]);
+        }
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: data
+            });
+            const json = await response.json();
+
+            if (json.result === 'success') {
+                statusMsg.innerText = "✅ Erfolgreich eingetragen!";
+                statusMsg.className = "success";
+                statusMsg.style.display = "block";
+                form.reset();
+                loadHelpers(); // Liste neu laden
+            } else {
+                throw new Error('Script meldete Fehler');
+            }
+        } catch (error) {
+            statusMsg.innerText = "❌ Fehler beim Speichern. Bitte versuche es später.";
+            statusMsg.className = "error";
+            statusMsg.style.display = "block";
+            console.error(error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Jetzt eintragen";
+        }
+    });
+
+    // 3. LocalStorage für Checkliste (Einkauf)
+    document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+        const saved = localStorage.getItem(box.id);
+        if (saved === 'true') box.checked = true;
+        box.addEventListener('change', () => localStorage.setItem(box.id, box.checked));
+    });
+
+    // Init
+    loadHelpers();
+
+</script>
+
+</body>
+</html>
