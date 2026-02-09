@@ -3,241 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Jugend Turnier Orga</title>
+    <title>Turnier-Planung 20.06.2026</title>
     <style>
         :root {
-            --grass-green: #2ecc71;
-            --dark-green: #27ae60;
-            --text-dark: #2c3e50;
-            --alert-red: #e74c3c;
-            --light-bg: #f4f7f6;
+            --grass: #2ecc71;
+            --dark: #27ae60;
+            --text: #2c3e50;
+            --alert: #e74c3c;
+            --warn: #f39c12;
+            --bg: #f0f2f5;
         }
         
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--light-bg); color: var(--text-dark); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 50px; }
         
-        header { background: linear-gradient(135deg, var(--dark-green), var(--grass-green)); color: white; padding: 2rem 1rem; text-align: center; }
-        header h1 { margin: 0; }
+        header { background: linear-gradient(135deg, var(--dark), var(--grass)); color: white; padding: 2rem 1rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header h1 { margin: 0; font-size: 2rem; }
+        header .date { font-size: 1.2rem; background: rgba(255,255,255,0.2); display: inline-block; padding: 5px 15px; border-radius: 20px; margin-top: 10px; }
 
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
         
-        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--grass-green); }
-        
-        h2 { border-bottom: 2px solid var(--grass-green); padding-bottom: 10px; margin-top: 0; }
+        .card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { border-bottom: 3px solid var(--grass); padding-bottom: 10px; margin-top: 0; color: var(--dark); }
 
-        /* Formular Styles */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        /* Status Grid */
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .shift-block { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .shift-header { background: #eee; padding: 10px; font-weight: bold; text-align: center; border-bottom: 1px solid #ddd; }
+        .shift-header.s1 { background: #d4e6f1; color: #2980b9; }
+        .shift-header.s2 { background: #fdebd0; color: #d35400; }
         
-        button#submit-btn {
-            width: 100%; padding: 15px; background: var(--dark-green); color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; transition: background 0.3s;
+        .slot-row { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; align-items: center; }
+        .slot-row:last-child { border-bottom: none; }
+        .slot-open { color: var(--alert); font-weight: bold; background: #fadbd8; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .slot-full { color: var(--dark); background: #d5f5e3; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .helper-name { font-size: 0.85rem; color: #7f8c8d; display: block; }
+
+        /* Form */
+        label { display: block; margin-bottom: 5px; font-weight: bold; margin-top: 15px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        button.btn-main { width: 100%; padding: 15px; background: var(--dark); color: white; border: none; border-radius: 8px; font-size: 1.2rem; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        button.btn-main:hover { background: #1e8449; }
+
+        /* Checklist */
+        .task-list { list-style: none; padding: 0; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .task-item.done { opacity: 0.6; background: #f9f9f9; }
+        .task-action { display: flex; gap: 10px; align-items: center; }
+        .task-doer { font-weight: bold; color: var(--dark); }
+        .btn-small { padding: 5px 10px; background: var(--warn); color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        /* Loading & Messages */
+        #loader { text-align: center; padding: 20px; color: #7f8c8d; }
+        .msg { padding: 15px; border-radius: 6px; margin-top: 10px; display: none; text-align: center; }
+        .msg.success { background: #d4edda; color: #155724; }
+
+        @media (max-width: 600px) {
+            .status-grid { grid-template-columns: 1fr; }
         }
-        button#submit-btn:hover { background: #1e8449; }
-        button#submit-btn:disabled { background: #95a5a6; cursor: not-allowed; }
-
-        /* Liste der Helfer */
-        #helper-list { list-style: none; padding: 0; }
-        .helper-item { background: #f9f9f9; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .helper-badge { background: var(--grass-green); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 10px; }
-        .badge-schicht1 { background: #3498db; }
-        .badge-schicht2 { background: #e67e22; }
-
-        /* Status Meldungen */
-        #status-message { margin-top: 10px; padding: 10px; border-radius: 6px; display: none; text-align: center; }
-        .success { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-
-        /* Checkbox Styles (Einkauf) */
-        .checkbox-wrapper { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
-        .checkbox-wrapper input { width: auto; margin-right: 10px; transform: scale(1.3); }
-        .checkbox-wrapper input:checked + span { text-decoration: line-through; color: #95a5a6; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>⚽ Turnier-Helfer & Orga</h1>
-    <p>16 Teams | 200 Gäste | 18 Helfer gesucht</p>
+    <h1>⚽ Sommer-Turnier Orga</h1>
+    <div class="date">Samstag, 20.06.2026</div>
 </header>
 
 <div class="container">
 
-    <div class="card" style="border-left-color: #e67e22;">
-        <h2>📝 Hier als Helfer eintragen</h2>
-        <p>Bitte trag dich ein. Die Daten landen direkt in unserer Liste.</p>
+    <div class="card">
+        <h2>📊 Schicht-Übersicht</h2>
+        <div id="loader">Lade aktuelle Belegung...</div>
         
-        <form id="volunteer-form">
-            <div class="form-group">
-                <label for="name">Dein Name</label>
-                <input type="text" id="name" name="name" placeholder="Vorname Nachname" required>
+        <div class="status-grid" id="status-container" style="display:none;">
+            <div class="shift-block">
+                <div class="shift-header s1">Schicht 1<br><small>08:45 - 11:30 Uhr</small></div>
+                <div id="s1-content"></div>
             </div>
             
-            <div class="form-group">
-                <label for="email">E-Mail Adresse (wird nicht öffentlich angezeigt)</label>
-                <input type="email" id="email" name="email" placeholder="max@beispiel.de" required>
+            <div class="shift-block">
+                <div class="shift-header s2">Schicht 2<br><small>11:00 - 14:00 Uhr</small></div>
+                <div id="s2-content"></div>
             </div>
+        </div>
+        <p style="text-align:center; margin-top:15px; font-size:0.9rem; color:#777;">
+            Wir brauchen pro Schicht: 1x Leitung, 2x Grill, 4x Verkauf, 1x Springer.
+        </p>
+    </div>
 
-            <div class="form-group">
-                <label for="schicht">Wähle deine Schicht</label>
-                <select id="schicht" name="schicht" required>
-                    <option value="" disabled selected>-- Bitte wählen --</option>
-                    <option value="1">Schicht 1: Aufbau & Turnierstart (08:30 - 12:15)</option>
-                    <option value="2">Schicht 2: Finale & Abbau (12:15 - 15:45)</option>
-                </select>
-            </div>
+    <div class="card" style="border-left: 5px solid #e67e22;">
+        <h2>📝 Hier als Helfer eintragen</h2>
+        <form id="volunteer-form">
+            <label>Dein Name</label>
+            <input type="text" name="name" placeholder="Vorname Nachname" required>
+            
+            <label>Name des Kindes (F-Jugend)</label>
+            <input type="text" name="kind" placeholder="Wer spielt mit?" required>
 
-            <div class="form-group">
-                <label for="aufgabe">Wunsch-Position</label>
-                <select id="aufgabe" name="aufgabe" required>
-                    <option value="" disabled selected>-- Bitte wählen --</option>
-                    <option value="Verkauf/Theke">Verkauf & Theke (Allrounder)</option>
-                    <option value="Grill">Grillmeister</option>
-                    <option value="Turnierleitung">Turnierleitung (Sprecher/PC)</option>
-                    <option value="Springer">Springer (Küche/Nachschub)</option>
-                </select>
-            </div>
+            <label>E-Mail Adresse</label>
+            <input type="email" name="email" placeholder="Für Infos" required>
 
-            <button type="submit" id="submit-btn">Jetzt eintragen</button>
-            <div id="status-message"></div>
+            <label>Wähle deine Schicht</label>
+            <select name="schicht" required>
+                <option value="" disabled selected>-- Bitte wählen --</option>
+                <option value="1">Schicht 1 (08:45 - 11:30)</option>
+                <option value="2">Schicht 2 (11:00 - 14:00)</option>
+            </select>
+
+            <label>Wunsch-Position</label>
+            <select name="aufgabe" required>
+                <option value="" disabled selected>-- Wo möchtest du helfen? --</option>
+                <option value="Verkauf">Verkauf & Theke (4 Pers.)</option>
+                <option value="Grill">Grillmeister (2 Pers.)</option>
+                <option value="Turnierleitung">Turnierleitung (1 Pers.)</option>
+                <option value="Springer">Springer / Küche (1 Pers.)</option>
+            </select>
+
+            <button type="submit" class="btn-main" id="submit-btn">Eintragen</button>
+            <div class="msg" id="form-msg"></div>
         </form>
     </div>
 
     <div class="card">
-        <h2>👥 Wer ist schon dabei?</h2>
-        <p>Aktuelle Anmeldungen (Echtzeit aus Google Sheets):</p>
-        <ul id="helper-list">
-            <li style="text-align:center; color: #999;">Lade Daten...</li>
-        </ul>
-    </div>
-
-    <div class="card">
-        <h2>🛒 Einkaufs-Checkliste (Nur für dich)</h2>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="item1"><span>Metzger: 200 Würstchen</span></label></div>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="item2"><span>Bäcker: 250 Brötchen</span></label></div>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="item3"><span>Langnese Outlet: 120 Eis</span></label></div>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="item4"><span>Getränke (Wasser, Schorle, Soft, Bier)</span></label></div>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="item5"><span>Wechselgeld (150€)</span></label></div>
-        <div class="checkbox-wrapper"><label><input type="checkbox" id="tech1"><span>Mikrofon & Musik-Box testen</span></label></div>
+        <h2>🛒 Einkaufs- & Orga-Liste</h2>
+        <p>Hier sind Dinge, die vor dem Turnier erledigt werden müssen. Trage deinen Namen ein, wenn du das übernimmst.</p>
+        <ul class="task-list" id="task-container">
+            </ul>
     </div>
 
 </div>
 
 <script>
     // ==========================================
-    // KONFIGURATION
-    // ==========================================
-    // FÜGE HIER DEINE GOOGLE APPS SCRIPT URL EIN:
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec'; 
+    // DEINE URL HIER EINFÜGEN:
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec'; 
     // ==========================================
 
-    const form = document.getElementById('volunteer-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const statusMsg = document.getElementById('status-message');
-    const listContainer = document.getElementById('helper-list');
+    // Soll-Stärke pro Schicht
+    const TARGETS = {
+        'Turnierleitung': 1,
+        'Grill': 2,
+        'Verkauf': 4,
+        'Springer': 1
+    };
 
-    // 1. Daten beim Laden abrufen (GET)
-    async function loadHelpers() {
-        if(SCRIPT_URL === 'HIER_DEINE_WEB_APP_URL_EINFÜGEN') {
-            listContainer.innerHTML = '<li style="color:red;">⚠️ Bitte Script-URL im Code eintragen!</li>';
-            return;
-        }
+    // Initial Laden
+    loadAllData();
 
+    async function loadAllData() {
+        if(API_URL.includes('HIER_DEINE')) return;
+        
         try {
-            const response = await fetch(SCRIPT_URL);
-            const json = await response.json();
+            const res = await fetch(API_URL);
+            const json = await res.json();
             
-            if (json.result === 'success') {
-                renderList(json.data);
-            } else {
-                console.error('Fehler beim Laden:', json);
+            if(json.result === 'success') {
+                renderDashboard(json.data.helfer);
+                renderChecklist(json.data.aufgaben);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('status-container').style.display = 'grid';
             }
-        } catch (error) {
-            listContainer.innerHTML = '<li>Konnte Daten nicht laden.</li>';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('loader').innerText = "Fehler beim Laden.";
         }
     }
 
-    function renderList(data) {
-        listContainer.innerHTML = '';
-        if (data.length === 0) {
-            listContainer.innerHTML = '<li>Noch keine Helfer eingetragen.</li>';
-            return;
-        }
-        
-        // Sortieren nach Schicht
-        data.sort((a, b) => a.schicht - b.schicht);
+    function renderDashboard(helpers) {
+        // Hilfsfunktion um Slots zu bauen
+        const buildSlots = (shiftNum, containerId) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            // Für jede Position (Grill, Verkauf...)
+            for (const [role, targetCount] of Object.entries(TARGETS)) {
+                // Wer hat sich angemeldet?
+                const signedUp = helpers.filter(h => h.schicht == shiftNum && h.aufgabe == role);
+                const count = signedUp.length;
+                
+                let html = `<div class="slot-row">
+                    <div><strong>${role}</strong>`;
+                
+                // Namen anzeigen
+                if(count > 0) {
+                    signedUp.forEach(p => {
+                        html += `<span class="helper-name">✅ ${p.name} (${p.kind})</span>`;
+                    });
+                }
+                html += `</div>`;
 
-        data.forEach(person => {
+                // Status Badge
+                const needed = targetCount - count;
+                if(needed > 0) {
+                    html += `<div class="slot-open">${needed} offen</div>`;
+                } else {
+                    html += `<div class="slot-full">Voll</div>`;
+                }
+                
+                html += `</div>`;
+                container.innerHTML += html;
+            }
+        };
+
+        buildSlots(1, 's1-content');
+        buildSlots(2, 's2-content');
+    }
+
+    function renderChecklist(tasks) {
+        const list = document.getElementById('task-container');
+        list.innerHTML = '';
+
+        tasks.forEach(task => {
             const li = document.createElement('li');
-            li.className = 'helper-item';
-            
-            const badgeClass = person.schicht == 1 ? 'badge-schicht1' : 'badge-schicht2';
-            
-            li.innerHTML = `
-                <div><strong>${person.name}</strong> <small>(${person.aufgabe})</small></div>
-                <div><span class="helper-badge ${badgeClass}">Schicht ${person.schicht}</span></div>
-            `;
-            listContainer.appendChild(li);
+            li.className = 'task-item';
+            if(task.wer) li.classList.add('done');
+
+            let actionHtml = '';
+            if(task.wer) {
+                actionHtml = `<span class="task-doer">✅ ${task.wer}</span>`;
+            } else {
+                actionHtml = `
+                    <div class="task-action">
+                        <input type="text" placeholder="Dein Name" id="claim-${task.item.replace(/\s/g,'')}" style="padding:5px; width:120px;">
+                        <button class="btn-small" onclick="claimTask('${task.item}', 'claim-${task.item.replace(/\s/g,'')}')">Übernehmen</button>
+                    </div>
+                `;
+            }
+
+            li.innerHTML = `<span>${task.item}</span> ${actionHtml}`;
+            list.appendChild(li);
         });
     }
 
-    // 2. Daten senden (POST)
-    form.addEventListener('submit', async (e) => {
+    // FORMULAR ABSENDEN (HELFER)
+    document.getElementById('volunteer-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const btn = document.getElementById('submit-btn');
+        const msg = document.getElementById('form-msg');
         
-        if(SCRIPT_URL.includes('HIER_DEINE')) {
-            alert("Bitte erst die Script URL im HTML Code hinterlegen!");
-            return;
-        }
+        btn.disabled = true;
+        btn.innerText = "Speichere...";
 
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Wird gesendet...";
-        statusMsg.style.display = 'none';
-
-        // Daten sammeln
-        const formData = new FormData(form);
+        const formData = new FormData(e.target);
         const data = new URLSearchParams();
-        data.append('action', 'insert'); // Wichtig für unser Script
-        for (const pair of formData) {
-            data.append(pair[0], pair[1]);
-        }
+        data.append('action', 'register_helper');
+        for (const pair of formData) data.append(pair[0], pair[1]);
 
         try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: data
-            });
-            const json = await response.json();
-
-            if (json.result === 'success') {
-                statusMsg.innerText = "✅ Erfolgreich eingetragen!";
-                statusMsg.className = "success";
-                statusMsg.style.display = "block";
-                form.reset();
-                loadHelpers(); // Liste neu laden
-            } else {
-                throw new Error('Script meldete Fehler');
-            }
-        } catch (error) {
-            statusMsg.innerText = "❌ Fehler beim Speichern. Bitte versuche es später.";
-            statusMsg.className = "error";
-            statusMsg.style.display = "block";
-            console.error(error);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Jetzt eintragen";
+            await fetch(API_URL, { method: 'POST', body: data });
+            msg.innerText = "✅ Super, danke! Du bist eingetragen.";
+            msg.className = "msg success";
+            msg.style.display = "block";
+            e.target.reset();
+            loadAllData(); // Aktualisieren
+        } catch (err) {
+            alert("Fehler beim Speichern");
         }
+        btn.disabled = false;
+        btn.innerText = "Eintragen";
     });
 
-    // 3. LocalStorage für Checkliste (Einkauf)
-    document.querySelectorAll('input[type="checkbox"]').forEach(box => {
-        const saved = localStorage.getItem(box.id);
-        if (saved === 'true') box.checked = true;
-        box.addEventListener('change', () => localStorage.setItem(box.id, box.checked));
-    });
+    // AUFGABE ÜBERNEHMEN
+    async function claimTask(itemName, inputId) {
+        const nameInput = document.getElementById(inputId);
+        const name = nameInput.value;
+        if(!name) { alert("Bitte Namen eingeben"); return; }
 
-    // Init
-    loadHelpers();
+        const data = new URLSearchParams();
+        data.append('action', 'claim_task');
+        data.append('taskName', itemName);
+        data.append('personName', name);
 
+        // UI sofort updaten (optimistisch)
+        nameInput.parentElement.innerHTML = "⏳ Speichere...";
+
+        try {
+            await fetch(API_URL, { method: 'POST', body: data });
+            loadAllData(); // Alles neu laden
+        } catch (err) {
+            alert("Fehler.");
+            loadAllData();
+        }
+    }
 </script>
 
 </body>
