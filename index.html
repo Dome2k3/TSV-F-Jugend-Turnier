@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Jugend Sommer-Cup 2026</title>
+    <title>F-Jugend Sommer-Cup Juni 2026</title>
     <style>
         :root {
             --grass: #2ecc71;
@@ -144,7 +144,7 @@
         .desc { font-size: 0.95rem; line-height: 1.4; }
         .highlight-bg { background-color: #f9f9f9; border-radius: 5px; padding: 5px; }
 
-        /* --- IMAGE & MODAL STYLES (NEU) --- */
+        /* --- IMAGE & MODAL STYLES --- */
         .timeline-image-container {
             margin-top: 25px;
             text-align: center;
@@ -161,9 +161,8 @@
         }
         .timeline-thumb:hover { transform: scale(1.02); opacity: 0.9; }
 
-        /* The Modal (background) */
         .modal {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed; 
             z-index: 1000; 
             left: 0;
@@ -171,10 +170,8 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgb(0,0,0); 
             background-color: rgba(0,0,0,0.9); 
         }
-        /* Modal Content (Image) */
         .modal-content {
             margin: auto;
             display: block;
@@ -182,12 +179,9 @@
             max-width: 1200px;
             margin-top: 5%;
             border-radius: 4px;
+            animation-name: zoom; animation-duration: 0.3s;
         }
-        /* Animation */
-        .modal-content { animation-name: zoom; animation-duration: 0.3s; }
         @keyframes zoom { from {transform:scale(0)} to {transform:scale(1)} }
-
-        /* Close Button */
         .close {
             position: absolute;
             top: 15px;
@@ -199,7 +193,6 @@
             cursor: pointer;
         }
         .close:hover, .close:focus { color: #bbb; text-decoration: none; cursor: pointer; }
-
 
         /* --- CHECKLIST STYLES --- */
         .checklist-container {
@@ -229,7 +222,14 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .task-doer { font-weight: bold; color: var(--dark-green); font-size: 0.9rem; }
+        .task-doer { 
+            font-weight: bold; 
+            color: var(--dark-green); 
+            font-size: 0.9rem; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         .task-action input { width: 110px; padding: 6px; font-size: 0.9rem; margin-right: 5px; }
         .btn-small { 
             padding: 6px 12px; 
@@ -240,6 +240,23 @@
             cursor: pointer; 
             font-weight: bold;
         }
+        
+        /* DELETE BUTTON STYLE (NEU) */
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        .btn-delete:hover { background: #c0392b; }
         
         /* --- UTILS --- */
         .msg { padding: 15px; border-radius: 6px; margin-top: 10px; display: none; text-align: center; }
@@ -297,7 +314,7 @@
         
         <form id="volunteer-form">
             <label>Dein Name</label>
-            <input type="text" name="name" placeholder="Vorname Nachname" required>
+            <input type="text" name="name" placeholder="Vorname (genügt)" required>
             
             <label>Name des Kindes (F-Jugend)</label>
             <input type="text" name="kind" placeholder="Wer spielt mit?" required>
@@ -392,7 +409,7 @@
 
         <div class="timeline-image-container">
             <p style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 10px;">👇 Grafik zum Vergrößern anklicken:</p>
-            <img id="timelineImg" class="timeline-thumb" src="zeitplan.png" alt="Zeitplan Grafik">
+            <img id="timelineImg" class="timeline-thumb" src="source/zeitplan.png" alt="Zeitplan Grafik">
         </div>
 
     </div>
@@ -423,10 +440,11 @@
 
 
 <script>
-    // DEINE API URL (fest hinterlegt)
+    // DEINE API URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
 
     // Konfiguration der Soll-Stärken
+    // NEU: Turnierleitung jetzt auf 2
     const TARGETS = {
         'Turnierleitung': 2,
         'Grill': 2,
@@ -439,23 +457,16 @@
     const img = document.getElementById("timelineImg");
     const modalImg = document.getElementById("imgFull");
     
-    // Klick auf Thumbnail öffnet Modal
     img.onclick = function(){
       modal.style.display = "block";
       modalImg.src = this.src;
     }
     
-    // Klick auf X schließt Modal
     const span = document.getElementsByClassName("close")[0];
-    span.onclick = function() { 
-      modal.style.display = "none";
-    }
+    span.onclick = function() { modal.style.display = "none"; }
 
-    // Klick außerhalb des Bildes schließt auch
     window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
+        if (event.target == modal) { modal.style.display = "none"; }
     }
 
 
@@ -534,17 +545,21 @@
             li.className = 'task-item';
 
             if(task.wer) {
+                // Erledigt + Löschen Button
                 li.style.backgroundColor = "#f0fff4";
                 li.innerHTML = `
                     <span style="opacity:0.6; text-decoration:line-through;">${task.item}</span> 
-                    <span class="task-doer">✅ ${task.wer}</span>
+                    <span class="task-doer">
+                        ✅ ${task.wer} 
+                        <button class="btn-delete" onclick="unclaimTask('${task.item}')" title="Austragen">✖</button>
+                    </span>
                 `;
             } else {
                 const safeId = 'claim-' + task.item.replace(/[^a-zA-Z0-9]/g, '');
                 li.innerHTML = `
                     <span>${task.item}</span> 
                     <div class="task-action">
-                        <input type="text" placeholder="Dein Name" id="${safeId}">
+                        <input type="text" placeholder="Vorname" id="${safeId}">
                         <button class="btn-small" onclick="claimTask('${task.item}', '${safeId}')">Ich mach's</button>
                     </div>
                 `;
@@ -611,6 +626,27 @@
             alert("Fehler beim Speichern.");
             btn.innerText = originalText;
             btn.disabled = false;
+        }
+    }
+
+    // --- UNCLAIM TASK (NEU) ---
+    async function unclaimTask(itemName) {
+        if(!confirm("Möchtest du " + itemName + " wirklich wieder freigeben?")) {
+            return;
+        }
+
+        // Lade-Indikator ist hier schwierig direkt am Element, 
+        // daher laden wir einfach die Liste neu, user merkt kurze Verzögerung
+        
+        const data = new URLSearchParams();
+        data.append('action', 'unclaim_task');
+        data.append('taskName', itemName);
+
+        try {
+            await fetch(API_URL, { method: 'POST', body: data });
+            loadAllData(); // Seite/Liste neu laden
+        } catch (err) {
+            alert("Fehler beim Austragen.");
         }
     }
 </script>
