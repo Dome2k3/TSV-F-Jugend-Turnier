@@ -20,8 +20,7 @@ No Laziness: Find root causes. No temporary fixes. Senior developer standards.
 
 Minimal Impact: Only touch what's necessary. No side effects with new bugs.
 
-
-
+```mermaid
 gantt
     title ⚽ F-Jugend Turnier Zeitplan
     dateFormat HH:mm
@@ -37,12 +36,13 @@ gantt
     Grill anfeuern           :milestone, 10:30, 0m
     
     section Catering & Schichten
-    Schicht 1 (Dienst)       :c1, 08:45, 2h 45m
+    Schicht 1 (Dienst)       :c1, 08:45, 135m
     SCHICHTWECHSEL (Overlap) :crit, c2, 11:00, 30m
-    Schicht 2 (Dienst)       :c3, 11:00, 3h 30m
+    Schicht 2 (Dienst)       :c3, 11:30, 150m
     Eis-Verkauf Push         :milestone, 12:30, 0m
     
     section Ende
     Siegerehrung             :crit, e1, 14:00, 30m
     Abbau & Aufräumen        :active, e2, 14:30, 1h
-    Helfer-Ausklang (Bierchen):milestone, 14:30, 0m
+    Helfer-Ausklang          :milestone, 14:30, 0m
+```
