@@ -150,8 +150,8 @@
         /* ── GROUPS GRID ─────────────────────────────────────── */
         .groups-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
         }
 
         /* ── STANDINGS TABLE ─────────────────────────────────── */
@@ -180,46 +180,39 @@
         .standings-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.88rem;
+            font-size: 0.82rem;
         }
         .standings-table th {
             color: #8b949e;
             font-weight: 600;
             text-align: center;
-            padding: 4px 6px;
+            padding: 4px 4px;
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
-        .standings-table th:first-child,
-        .standings-table th:nth-child(2) { text-align: left; }
+        .standings-table th:first-child { text-align: left; }
         .standings-table td {
-            padding: 7px 6px;
+            padding: 6px 4px;
             text-align: center;
             border-bottom: 1px solid rgba(48,54,61,0.6);
             transition: background 0.2s;
         }
-        .standings-table td:first-child { font-weight: bold; color: #8b949e; width: 24px; }
-        .standings-table td:nth-child(2) {
+        .standings-table td:first-child {
             text-align: left;
             font-weight: 600;
             color: #e6edf3;
-            max-width: 120px;
+            max-width: 110px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         .standings-table td.pts {
             font-weight: 800;
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--grass);
         }
         .standings-table tr:last-child td { border-bottom: none; }
         .standings-table tr:hover td { background: rgba(255,255,255,0.04); }
-
-        /* rank medals */
-        .rank-1 .name-cell::before { content: "🥇 "; }
-        .rank-2 .name-cell::before { content: "🥈 "; }
-        .rank-3 .name-cell::before { content: "🥉 "; }
 
         /* ── MATCHES SIDEBAR ─────────────────────────────────── */
         .sidebar { }
@@ -522,9 +515,16 @@
 
     function setLogo(placeholderId, containerId, url, imgId, append) {
         if (!url) return;
+        // Prevent duplication on repeated calls (e.g. auto-refresh)
+        const existing = document.getElementById(imgId);
+        if (existing) {
+            existing.src = url;
+            return;
+        }
         const placeholder = document.getElementById(placeholderId);
         if (placeholder) {
             const img = document.createElement('img');
+            img.id = imgId;
             img.src = url;
             img.className = 'logo-img';
             img.alt = imgId;
@@ -589,8 +589,8 @@
         const container = document.getElementById('hauptrunde-tables');
         container.innerHTML = '';
 
-        // Group names for the 5 leveling groups
-        const groupNames = { '1': 'Champions', '2': 'Platin', '3': 'Gold', '4': 'Silber', '5': 'Bronze' };
+        // Group names for the 5 leveling groups (neutral colors, no hierarchy)
+        const groupNames = { '1': 'Rot', '2': 'Blau', '3': 'Grün', '4': 'Gelb', '5': 'Orange' };
         const groups = ['1', '2', '3', '4', '5'];
         let anyGroup = false;
 
@@ -629,14 +629,12 @@
         tbl.innerHTML = `
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Team</th>
                     <th title="Spiele">Sp</th>
                     <th title="Gewonnen">G</th>
                     <th title="Unentschieden">U</th>
                     <th title="Verloren">V</th>
                     <th title="Tore:Gegentore">Tore</th>
-                    <th title="Tordifferenz">TD</th>
                     <th title="Punkte">Pkt</th>
                 </tr>
             </thead>
@@ -644,21 +642,15 @@
         `;
 
         const tbody = tbl.querySelector('tbody');
-        table.forEach((row, i) => {
-            const rank = i + 1;
+        table.forEach((row) => {
             const tr = document.createElement('tr');
-            if (rank <= 3) tr.className = `rank-${rank}`;
             tr.innerHTML = `
-                <td>${rank}</td>
                 <td class="name-cell" title="${escHtml(row.name)}">${escHtml(row.name)}</td>
                 <td>${row.played}</td>
                 <td>${row.won}</td>
                 <td>${row.drawn}</td>
                 <td>${row.lost}</td>
                 <td style="white-space:nowrap;">${row.goalsFor}:${row.goalsAgainst}</td>
-                <td style="color:${row.goalDiff >= 0 ? '#2ecc71' : '#e74c3c'};">
-                    ${row.goalDiff > 0 ? '+' : ''}${row.goalDiff}
-                </td>
                 <td class="pts">${row.points}</td>
             `;
             tbody.appendChild(tr);
