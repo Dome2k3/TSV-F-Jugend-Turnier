@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnierverwaltung – F-Jugend Sommer-Cup</title>
+    <style>
+        :root {
+            --grass: #2ecc71;
+            --dark-green: #27ae60;
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --gold: #f1c40f;
+            --silver: #bdc3c7;
+            --bronze: #cd6c2e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: #e6edf3;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, #0d4f2c 0%, #1a7a44 50%, #0d4f2c 100%);
+            padding: 16px 24px;
+            border-bottom: 3px solid var(--grass);
+            text-align: center;
+        }
+        header h1 {
+            margin: 0 0 4px;
+            font-size: clamp(1.1rem, 3vw, 1.6rem);
+            font-weight: 800;
+            color: #fff;
+        }
+        header .subtitle {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ── PHASE SWITCHER ── */
+        .phase-nav {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            padding: 20px 24px 0;
+        }
+        .phase-btn {
+            padding: 10px 32px;
+            border: 2px solid var(--grass);
+            background: transparent;
+            color: var(--grass);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .phase-btn:first-child { border-radius: 8px 0 0 8px; }
+        .phase-btn:last-child  { border-radius: 0 8px 8px 0; border-left: none; }
+        .phase-btn.active { background: var(--grass); color: #0d1117; }
+        .phase-btn:hover:not(.active) { background: rgba(46,204,113,0.15); }
+
+        /* ── MAIN ── */
+        .main-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+        }
+
+        /* ── INFO BANNER ── */
+        .info-banner {
+            background: rgba(46,204,113,0.08);
+            border: 1px solid rgba(46,204,113,0.25);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+        .info-banner strong { color: var(--grass); }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── ROUND HEADER ── */
+        .round-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--grass);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 24px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .round-header:first-child { margin-top: 0; }
+
+        /* ── MATCH ROW ── */
+        .match-entry {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto 1fr auto;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 4px;
+            border-bottom: 1px solid rgba(48,54,61,0.5);
+        }
+        .match-entry:last-child { border-bottom: none; }
+
+        .team-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            color: #e6edf3;
+            font-weight: 600;
+        }
+        .team-label.home { text-align: right; }
+        .team-label.away { text-align: left; }
+
+        .score-input {
+            width: 48px;
+            padding: 6px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #e6edf3;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .score-input:focus {
+            outline: none;
+            border-color: var(--grass);
+            background: rgba(46,204,113,0.08);
+        }
+        .score-separator {
+            color: #8b949e;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .btn-save {
+            padding: 6px 14px;
+            background: var(--dark-green);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        .btn-save:hover { background: #1e8449; }
+        .btn-save:disabled { opacity: 0.5; cursor: wait; }
+        .btn-save.saved {
+            background: rgba(46,204,113,0.2);
+            color: var(--grass);
+            border: 1px solid rgba(46,204,113,0.4);
+        }
+        .btn-save.error {
+            background: rgba(231,76,60,0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231,76,60,0.4);
+        }
+
+        /* ── FIELD BADGE ── */
+        .field-badge {
+            background: rgba(46,204,113,0.12);
+            color: var(--grass);
+            border: 1px solid rgba(46,204,113,0.3);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 5px;
+            text-align: center;
+            min-width: 26px;
+        }
+
+        /* ── LOADER / ERROR ── */
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+            font-style: italic;
+        }
+        .loader-spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(46,204,113,0.2);
+            border-top-color: var(--grass);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            border-radius: 8px;
+            padding: 16px;
+            color: #e74c3c;
+            text-align: center;
+        }
+
+        /* ── PHASE SECTION ── */
+        .phase-section { display: none; }
+        .phase-section.active { display: block; }
+
+        /* ── SAVE ALL BUTTON ── */
+        .save-all-wrap {
+            text-align: center;
+            margin: 20px 0 10px;
+        }
+        .btn-save-all {
+            padding: 12px 40px;
+            background: var(--grass);
+            color: #0d1117;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-save-all:hover { background: var(--dark-green); color: #fff; }
+        .btn-save-all:disabled { opacity: 0.5; cursor: wait; }
+
+        /* ── BACK LINK ── */
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #8b949e;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .back-link:hover { color: var(--grass); }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .match-entry {
+                grid-template-columns: 1fr auto auto auto 1fr;
+                gap: 5px;
+            }
+            .btn-save { display: none; }
+            .team-label { font-size: 0.78rem; }
+            .score-input { width: 40px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🏆 Turnierverwaltung</h1>
+    <div class="subtitle" id="header-subtitle">F-Jugend Sommer-Cup</div>
+</header>
+
+<div class="phase-nav">
+    <button class="phase-btn active" id="btn-vorrunde" onclick="switchPhase('vorrunde')">Vorrunde</button>
+    <button class="phase-btn" id="btn-hauptrunde" onclick="switchPhase('hauptrunde')">Hauptrunde</button>
+</div>
+
+<div class="main-content">
+
+    <div id="loading-indicator" class="loader">
+        <div class="loader-spinner"></div><br>Lade Turnierdaten…
+    </div>
+    <div id="error-indicator" class="error-msg" style="display:none;">
+        Fehler beim Laden der Daten. Bitte Seite neu laden.
+    </div>
+
+    <div id="main-sections" style="display:none;">
+        <div class="info-banner">
+            Hier können Spielergebnisse direkt eingetragen werden.
+            Tipp: Ergebnis eingeben und auf <strong>Speichern</strong> klicken – oder am Ende alle auf einmal mit
+            <strong>Alle Ergebnisse speichern</strong>.
+        </div>
+
+        <!-- VORRUNDE SECTION -->
+        <div class="phase-section active" id="section-vorrunde">
+            <div id="vorrunde-matches"></div>
+        </div>
+
+        <!-- HAUPTRUNDE SECTION -->
+        <div class="phase-section" id="section-hauptrunde">
+            <div id="hauptrunde-matches"></div>
+        </div>
+
+        <div class="save-all-wrap">
+            <button class="btn-save-all" id="btn-save-all" onclick="saveAll()">💾 Alle Ergebnisse speichern</button>
+        </div>
+
+        <div style="text-align:center;">
+            <a href="spieltag.html" class="back-link">← Zurück zur Anzeigetafel</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ──────────────────────────────────────────────────────────────
+    // CONFIGURATION
+    // ──────────────────────────────────────────────────────────────
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
+
+    // ──────────────────────────────────────────────────────────────
+    // STATE
+    // ──────────────────────────────────────────────────────────────
+    let currentPhase = 'vorrunde';
+    let teamMap = {};
+
+    // ──────────────────────────────────────────────────────────────
+    // PHASE SWITCHER
+    // ──────────────────────────────────────────────────────────────
+    function switchPhase(phase) {
+        currentPhase = phase;
+        document.getElementById('section-vorrunde').classList.toggle('active', phase === 'vorrunde');
+        document.getElementById('section-hauptrunde').classList.toggle('active', phase === 'hauptrunde');
+        document.getElementById('btn-vorrunde').classList.toggle('active', phase === 'vorrunde');
+        document.getElementById('btn-hauptrunde').classList.toggle('active', phase === 'hauptrunde');
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // DATA LOADING
+    // ──────────────────────────────────────────────────────────────
+    async function loadData() {
+        try {
+            const res = await fetch(API_URL + '?action=get_tournament_data');
+            const json = await res.json();
+
+            document.getElementById('loading-indicator').style.display = 'none';
+
+            if (json.result === 'success') {
+                const data = json.data;
+                if (data.config && data.config.tournamentName) {
+                    document.getElementById('header-subtitle').textContent = data.config.tournamentName;
+                    document.title = 'Verwaltung – ' + data.config.tournamentName;
+                }
+                teamMap = buildTeamMap(data.teams || []);
+                renderMatchForms('vorrunde-matches', data.matchesP1 || [], 'p1');
+                renderMatchForms('hauptrunde-matches', data.matchesP2 || [], 'p2');
+                document.getElementById('main-sections').style.display = 'block';
+            } else {
+                document.getElementById('error-indicator').style.display = 'block';
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('error-indicator').style.display = 'block';
+        }
+    }
+
+    function buildTeamMap(teams) {
+        const map = {};
+        teams.forEach(t => { map[t.id] = t; });
+        return map;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // RENDER MATCH ENTRY FORMS
+    // ──────────────────────────────────────────────────────────────
+    function renderMatchForms(containerId, matches, phase) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (!matches || matches.length === 0) {
+            container.innerHTML = '<div class="empty-state">Keine Spiele vorhanden.</div>';
+            return;
+        }
+
+        // Group by round, then by group within round
+        const byRound = {};
+        matches.forEach(m => {
+            const r = String(m.round || '?');
+            if (!byRound[r]) byRound[r] = [];
+            byRound[r].push(m);
+        });
+
+        const rounds = Object.keys(byRound).sort((a, b) => Number(a) - Number(b));
+
+        rounds.forEach(r => {
+            const roundDiv = document.createElement('div');
+            roundDiv.className = 'round-header';
+            roundDiv.textContent = 'Runde ' + r;
+            container.appendChild(roundDiv);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            // Sort matches within round by field, then group
+            const rMatches = byRound[r].slice().sort((a, b) => {
+                if (a.field !== b.field) return (Number(a.field) || 0) - (Number(b.field) || 0);
+                return String(a.group).localeCompare(String(b.group));
+            });
+
+            rMatches.forEach((m, idx) => {
+                const homeName = teamMap[m.homeId] ? teamMap[m.homeId].name : escHtml(m.homeId);
+                const awayName = teamMap[m.awayId] ? teamMap[m.awayId].name : escHtml(m.awayId);
+                const matchId = makeMatchId(phase, m);
+
+                const row = document.createElement('div');
+                row.className = 'match-entry';
+                row.setAttribute('data-match-id', matchId);
+                row.setAttribute('data-phase', phase);
+                row.setAttribute('data-home-id', m.homeId || '');
+                row.setAttribute('data-away-id', m.awayId || '');
+                row.setAttribute('data-group', m.group || '');
+                row.setAttribute('data-round', m.round || '');
+                row.setAttribute('data-field', m.field || '');
+
+                const scoreH = (m.scoreH !== null && m.scoreH !== undefined && m.scoreH !== '') ? m.scoreH : '';
+                const scoreA = (m.scoreA !== null && m.scoreA !== undefined && m.scoreA !== '') ? m.scoreA : '';
+
+                row.innerHTML = `
+                    <div class="team-label home" title="${escHtml(homeName)}">${escHtml(homeName)}</div>
+                    <input class="score-input" type="number" min="0" max="99"
+                        id="sh-${escHtml(matchId)}" value="${escHtml(String(scoreH))}"
+                        placeholder="–" aria-label="Heimtore ${escHtml(homeName)}">
+                    <span class="score-separator">:</span>
+                    <input class="score-input" type="number" min="0" max="99"
+                        id="sa-${escHtml(matchId)}" value="${escHtml(String(scoreA))}"
+                        placeholder="–" aria-label="Auswärtstore ${escHtml(awayName)}">
+                    <div class="team-label away" title="${escHtml(awayName)}">${escHtml(awayName)}</div>
+                    <button class="btn-save" id="btn-${escHtml(matchId)}"
+                        onclick="saveMatch('${escHtml(matchId)}')">Speichern</button>
+                `;
+
+                // If already has a score, style as played
+                if (scoreH !== '' && scoreA !== '') {
+                    const shInput = row.querySelector(`#sh-${CSS.escape(matchId)}`);
+                    const saInput = row.querySelector(`#sa-${CSS.escape(matchId)}`);
+                    if (shInput) shInput.style.borderColor = 'rgba(46,204,113,0.4)';
+                    if (saInput) saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+                }
+
+                card.appendChild(row);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    function makeMatchId(phase, m) {
+        return [phase, m.group, m.round, m.homeId, m.awayId].join('_');
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // SAVE SINGLE MATCH
+    // ──────────────────────────────────────────────────────────────
+    async function saveMatch(matchId) {
+        const btn = document.getElementById('btn-' + matchId);
+        const shInput = document.getElementById('sh-' + matchId);
+        const saInput = document.getElementById('sa-' + matchId);
+
+        if (!shInput || !saInput) return;
+
+        const scoreH = shInput.value.trim();
+        const scoreA = saInput.value.trim();
+
+        if (scoreH === '' || scoreA === '') {
+            shInput.style.borderColor = '#e74c3c';
+            saInput.style.borderColor = '#e74c3c';
+            setTimeout(() => {
+                shInput.style.borderColor = '';
+                saInput.style.borderColor = '';
+            }, 1500);
+            return;
+        }
+
+        const row = btn.closest('.match-entry');
+        if (!row) return;
+
+        const phase   = row.getAttribute('data-phase');
+        const homeId  = row.getAttribute('data-home-id');
+        const awayId  = row.getAttribute('data-away-id');
+        const group   = row.getAttribute('data-group');
+        const round   = row.getAttribute('data-round');
+        const field   = row.getAttribute('data-field');
+
+        btn.disabled = true;
+        btn.textContent = '⏳';
+
+        try {
+            const data = new URLSearchParams();
+            data.append('action', 'update_score');
+            data.append('phase', phase);
+            data.append('homeId', homeId);
+            data.append('awayId', awayId);
+            data.append('group', group);
+            data.append('round', round);
+            data.append('field', field);
+            data.append('scoreH', scoreH);
+            data.append('scoreA', scoreA);
+
+            await fetch(API_URL, { method: 'POST', body: data });
+
+            btn.textContent = '✅';
+            btn.className = 'btn-save saved';
+            shInput.style.borderColor = 'rgba(46,204,113,0.4)';
+            saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+
+            setTimeout(() => {
+                btn.textContent = 'Speichern';
+                btn.className = 'btn-save';
+                btn.disabled = false;
+            }, 2500);
+
+        } catch (err) {
+            console.error(err);
+            btn.textContent = '❌';
+            btn.className = 'btn-save error';
+            setTimeout(() => {
+                btn.textContent = 'Speichern';
+                btn.className = 'btn-save';
+                btn.disabled = false;
+            }, 2500);
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // SAVE ALL MATCHES IN CURRENT PHASE
+    // ──────────────────────────────────────────────────────────────
+    async function saveAll() {
+        const sectionId = currentPhase === 'vorrunde' ? 'section-vorrunde' : 'section-hauptrunde';
+        const section = document.getElementById(sectionId);
+        const rows = section.querySelectorAll('.match-entry');
+        const allBtn = document.getElementById('btn-save-all');
+
+        allBtn.disabled = true;
+        allBtn.textContent = '⏳ Speichere…';
+
+        let saved = 0;
+        let errors = 0;
+
+        for (const row of rows) {
+            const matchId = row.getAttribute('data-match-id');
+            if (!matchId) continue;
+
+            const shInput = document.getElementById('sh-' + matchId);
+            const saInput = document.getElementById('sa-' + matchId);
+
+            if (!shInput || !saInput) continue;
+
+            const scoreH = shInput.value.trim();
+            const scoreA = saInput.value.trim();
+
+            // Skip empty scores
+            if (scoreH === '' || scoreA === '') continue;
+
+            const phase  = row.getAttribute('data-phase');
+            const homeId = row.getAttribute('data-home-id');
+            const awayId = row.getAttribute('data-away-id');
+            const group  = row.getAttribute('data-group');
+            const round  = row.getAttribute('data-round');
+            const field  = row.getAttribute('data-field');
+
+            try {
+                const data = new URLSearchParams();
+                data.append('action', 'update_score');
+                data.append('phase', phase);
+                data.append('homeId', homeId);
+                data.append('awayId', awayId);
+                data.append('group', group);
+                data.append('round', round);
+                data.append('field', field);
+                data.append('scoreH', scoreH);
+                data.append('scoreA', scoreA);
+
+                await fetch(API_URL, { method: 'POST', body: data });
+                saved++;
+
+                shInput.style.borderColor = 'rgba(46,204,113,0.4)';
+                saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+
+            } catch (err) {
+                errors++;
+            }
+        }
+
+        allBtn.disabled = false;
+        if (errors > 0) {
+            allBtn.textContent = `❌ ${errors} Fehler (${saved} gespeichert)`;
+        } else if (saved > 0) {
+            allBtn.textContent = `✅ ${saved} Ergebnis${saved !== 1 ? 'se' : ''} gespeichert`;
+        } else {
+            allBtn.textContent = 'Keine neuen Ergebnisse';
+        }
+        setTimeout(() => {
+            allBtn.textContent = '💾 Alle Ergebnisse speichern';
+        }, 3000);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // UTILITY
+    // ──────────────────────────────────────────────────────────────
+    function escHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // INIT
+    // ──────────────────────────────────────────────────────────────
+    loadData();
+</script>
+
+</body>
+</html>
