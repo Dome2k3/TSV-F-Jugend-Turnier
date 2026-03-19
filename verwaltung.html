@@ -252,6 +252,25 @@
         .btn-save-all:hover { background: var(--dark-green); color: #fff; }
         .btn-save-all:disabled { opacity: 0.5; cursor: wait; }
 
+        /* ── GENERATE HAUPTRUNDE BUTTON ── */
+        .generate-wrap {
+            text-align: center;
+            margin: 0 0 20px;
+        }
+        .btn-generate {
+            padding: 11px 28px;
+            background: transparent;
+            color: #f39c12;
+            border: 2px solid #f39c12;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-generate:hover { background: rgba(243,156,18,0.15); }
+        .btn-generate:disabled { opacity: 0.5; cursor: wait; }
+
         /* ── BACK LINK ── */
         .back-link {
             display: inline-block;
@@ -317,6 +336,9 @@
 
         <!-- HAUPTRUNDE SECTION -->
         <div class="phase-section" id="section-hauptrunde">
+            <div class="generate-wrap">
+                <button class="btn-generate" id="btn-generate-hauptrunde" onclick="generateHauptrunde()">🔄 Hauptrunde generieren</button>
+            </div>
             <div id="hauptrunde-matches"></div>
         </div>
 
@@ -547,6 +569,49 @@
                 btn.className = 'btn-save';
                 btn.disabled = false;
             }, 2500);
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // GENERATE HAUPTRUNDE
+    // ──────────────────────────────────────────────────────────────
+    async function generateHauptrunde() {
+        const btn = document.getElementById('btn-generate-hauptrunde');
+
+        const confirmed = window.confirm(
+            'Hauptrunde generieren?\n\n' +
+            'Die Ergebnisse aus den 10 Vorrunden-Runden werden ausgewertet ' +
+            'und der Spielplan für die Hauptrunde (matchesP2) wird automatisch erstellt.\n\n' +
+            'Bestehende Hauptrunden-Daten werden dabei überschrieben!'
+        );
+        if (!confirmed) return;
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Generiere…';
+
+        try {
+            const data = new URLSearchParams();
+            data.append('action', 'generate_hauptrunde');
+
+            const res  = await fetch(API_URL, { method: 'POST', body: data });
+            const json = await res.json();
+
+            if (json.result === 'success') {
+                btn.textContent = '✅ Erfolgreich!';
+                btn.style.color       = '#2ecc71';
+                btn.style.borderColor = '#2ecc71';
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                const msg = (json.message || (json.data && json.data.message)) || 'Unbekannter Fehler';
+                alert('Fehler beim Generieren der Hauptrunde:\n\n' + msg);
+                btn.textContent = '🔄 Hauptrunde generieren';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Verbindungsfehler. Bitte Seite neu laden und erneut versuchen.');
+            btn.textContent = '🔄 Hauptrunde generieren';
+            btn.disabled = false;
         }
     }
 
