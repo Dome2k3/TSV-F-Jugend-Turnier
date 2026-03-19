@@ -6,12 +6,12 @@
  * ============================================================
  *
  *  Sheet-Struktur:
- *    config    – tournamentName | tournamentDate | logoClub | logoSponsor1 | logoSponsor2
- *    teams     – id | name | gruppe
- *    matchesP1 – group | round | field | homeId | awayId | scoreH | scoreA
- *    matchesP2 – group | round | field | homeId | awayId | scoreH | scoreA
- *    helfer    – schicht | aufgabe | name | kind | email | timestamp
- *    aufgaben  – item | wer
+ *    Config    – key | value (z.B. tournamentName, tournamentDate, logoClub, logoSponsor1, logoSponsor2)
+ *    Teams     – id | name | gruppe
+ *    MatchesP1 – group | round | field | homeId | awayId | scoreH | scoreA
+ *    MatchesP2 – group | round | field | homeId | awayId | scoreH | scoreA
+ *    Helfer    – schicht | aufgabe | name | kind | email | timestamp
+ *    Aufgaben  – item | wer
  */
 
 // ──────────────────────────────────────────────────────────────
@@ -19,36 +19,157 @@
 // ──────────────────────────────────────────────────────────────
 
 function doGet(e) {
-  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
+  var lock = LockService.getPublicLock();
+  lock.waitLock(30000);
 
-  if (action === 'get_tournament_data') {
-    return getTournamentData();
+  try {
+    var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
+
+    if (action === 'get_tournament_data') {
+      return getTournamentData();
+    }
+
+    if (action === 'debug') {
+      return getDebugData();
+    }
+
+    // Default: Helfer + Aufgaben zurückgeben (Abwärtskompatibilität)
+    return getDefaultHelferAufgaben();
+
+  } catch (err) {
+    return jsonError('doGet: ' + err.toString());
+  } finally {
+    lock.releaseLock();
   }
-
-  return jsonError('Unbekannte Aktion: ' + action);
 }
 
 function doPost(e) {
-  var params = (e && e.parameter) ? e.parameter : {};
-  var action = params.action || '';
+  var lock = LockService.getPublicLock();
+  lock.waitLock(30000);
 
-  if (action === 'update_score') {
-    return updateScore(params);
+  try {
+    var params = (e && e.parameter) ? e.parameter : {};
+    var action = params.action || '';
+
+    if (action === 'update_score') {
+      return updateScore(params);
+    }
+    if (action === 'register_helper') {
+      return registerHelper(params);
+    }
+    if (action === 'claim_task') {
+      return claimTask(params);
+    }
+    if (action === 'unclaim_task') {
+      return unclaimTask(params);
+    }
+    if (action === 'generate_hauptrunde') {
+      return generateHauptrunde();
+    }
+
+    return jsonError('Unbekannte Aktion: ' + action);
+
+  } catch (err) {
+    return jsonError('doPost: ' + err.toString());
+  } finally {
+    lock.releaseLock();
   }
-  if (action === 'register_helper') {
-    return registerHelper(params);
-  }
-  if (action === 'claim_task') {
-    return claimTask(params);
-  }
-  if (action === 'unclaim_task') {
-    return unclaimTask(params);
-  }
-  if (action === 'generate_hauptrunde') {
-    return generateHauptrunde();
+}
+
+// ──────────────────────────────────────────────────────────────
+// DEBUG
+// ──────────────────────────────────────────────────────────────
+
+function getDebugData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var debugResult = {
+    sheets: [],
+    teamsRaw: [],
+    matchesP1Raw: []
+  };
+
+  var allSheets = ss.getSheets();
+  allSheets.forEach(function(s) {
+    debugResult.sheets.push(s.getName());
+  });
+
+  var teamsSheet = ss.getSheetByName('Teams');
+  if (teamsSheet) {
+    var tv = teamsSheet.getDataRange().getValues();
+    for (var i = 0; i < Math.min(tv.length, 5); i++) {
+      debugResult.teamsRaw.push({
+        row: i,
+        col0: String(tv[i][0]),
+        col1: String(tv[i][1]),
+        col2: String(tv[i][2]),
+        col2type: typeof tv[i][2]
+      });
+    }
+  } else {
+    debugResult.teamsRaw = ["Sheet 'Teams' NOT FOUND"]; 
   }
 
-  return jsonError('Unbekannte Aktion: ' + action);
+  var mp1Sheet = ss.getSheetByName('MatchesP1');
+  if (mp1Sheet) {
+    var mv = mp1Sheet.getDataRange().getValues();
+    for (var j = 0; j < Math.min(mv.length, 5); j++) {
+      debugResult.matchesP1Raw.push({
+        row: j,
+        col0: String(mv[j][0]),
+        col1: String(mv[j][1]),
+        col2: String(mv[j][2]),
+        col3: String(mv[j][3]),
+        col4: String(mv[j][4])
+      });
+    }
+  } else {
+    debugResult.matchesP1Raw = ["Sheet 'MatchesP1' NOT FOUND"]; 
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ result: 'debug', data: debugResult }, null, 2))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ──────────────────────────────────────────────────────────────
+// DEFAULT GET: Helfer + Aufgaben (Abwärtskompatibilität)
+// ──────────────────────────────────────────────────────────────
+
+function getDefaultHelferAufgaben() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  var helferData = [];
+  var sheetHelfer = ss.getSheetByName('Teilnehmer');
+  if (sheetHelfer) {
+    var rowsHelfer = sheetHelfer.getDataRange().getValues();
+    for (var i = 1; i < rowsHelfer.length; i++) {
+      if (rowsHelfer[i][1]) {
+        helferData.push({
+          name:    rowsHelfer[i][1],
+          kind:    rowsHelfer[i][3],
+          schicht: rowsHelfer[i][4],
+          aufgabe: rowsHelfer[i][5]
+        });
+      }
+    }
+  }
+
+  var aufgabenData = [];
+  var sheetAufgaben = ss.getSheetByName('Aufgaben');
+  if (sheetAufgaben) {
+    var rowsAufgaben = sheetAufgaben.getDataRange().getValues();
+    for (var j = 1; j < rowsAufgaben.length; j++) {
+      if (rowsAufgaben[j][0]) {
+        aufgabenData.push({
+          item: rowsAufgaben[j][0],
+          wer:  rowsAufgaben[j][1] || ''
+        });
+      }
+    }
+  }
+
+  return jsonSuccess({ helfer: helferData, aufgaben: aufgabenData });
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -59,12 +180,12 @@ function getTournamentData() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    var config   = readConfig(ss);
-    var teams    = readSheet(ss, 'teams',    ['id','name','gruppe']);
-    var matchesP1 = readSheet(ss, 'matchesP1', ['group','round','field','homeId','awayId','scoreH','scoreA']);
-    var matchesP2 = readSheet(ss, 'matchesP2', ['group','round','field','homeId','awayId','scoreH','scoreA']);
-    var helfer   = readSheet(ss, 'helfer',   ['schicht','aufgabe','name','kind','email','timestamp']);
-    var aufgaben = readSheet(ss, 'aufgaben', ['item','wer']);
+    var config    = readConfig(ss);
+    var teams     = readSheet(ss, 'Teams',     ['id','name','gruppe']);
+    var matchesP1 = readSheet(ss, 'MatchesP1', ['group','round','field','homeId','awayId','scoreH','scoreA']);
+    var matchesP2 = readSheet(ss, 'MatchesP2', ['group','round','field','homeId','awayId','scoreH','scoreA']);
+    var helfer    = readSheet(ss, 'Helfer',    ['schicht','aufgabe','name','kind','email','timestamp']);
+    var aufgaben  = readSheet(ss, 'Aufgaben',  ['item','wer']);
 
     return jsonSuccess({
       config:    config,
@@ -85,26 +206,29 @@ function getTournamentData() {
 
 function updateScore(params) {
   try {
-    var phase  = params.phase  || '';   // 'p1' or 'p2'
-    var homeId = String(params.homeId || '');
-    var awayId = String(params.awayId || '');
-    var group  = String(params.group  || '');
-    var round  = String(params.round  || '');
-    var field  = String(params.field  || '');
+    var phase  = String(params.phase  || '').trim();   // 'p1' or 'p2'
+    var homeId = String(params.homeId || '').trim();
+    var awayId = String(params.awayId || '').trim();
+    var group  = String(params.group  || '').trim();
+    var round  = String(params.round  || '').trim();
+    var field  = String(params.field  || '').trim();
     var scoreH = params.scoreH;
     var scoreA = params.scoreA;
 
+    if (!homeId || !awayId) {
+      return jsonError('Fehlende Parameter (homeId, awayId)');
+    }
     if (scoreH === '' || scoreH === undefined || scoreA === '' || scoreA === undefined) {
       return jsonError('Fehlende Ergebnisse');
     }
 
-    var sheetName = (phase === 'p2') ? 'matchesP2' : 'matchesP1';
+    var sheetName = (phase === 'p2') ? 'MatchesP2' : 'MatchesP1';
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(sheetName);
     if (!sheet) return jsonError('Sheet nicht gefunden: ' + sheetName);
 
     var data    = sheet.getDataRange().getValues();
-    var headers = data[0]; // group | round | field | homeId | awayId | scoreH | scoreA
+    var headers = data[0];
     var iGroup  = headers.indexOf('group');
     var iRound  = headers.indexOf('round');
     var iField  = headers.indexOf('field');
@@ -115,20 +239,22 @@ function updateScore(params) {
 
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      if (
-        String(row[iGroup])  === group  &&
-        String(row[iRound])  === round  &&
-        String(row[iField])  === field  &&
-        String(row[iHomeId]) === homeId &&
-        String(row[iAwayId]) === awayId
-      ) {
-        sheet.getRange(i + 1, iScoreH + 1).setValue(Number(scoreH));
-        sheet.getRange(i + 1, iScoreA + 1).setValue(Number(scoreA));
-        return jsonSuccess({ updated: true });
-      }
+
+      // Pflicht: homeId + awayId müssen übereinstimmen
+      if (String(row[iHomeId]).trim() !== homeId) continue;
+      if (String(row[iAwayId]).trim() !== awayId) continue;
+
+      // Optional: group, round, field – nur prüfen wenn übergeben
+      if (group !== '' && String(row[iGroup]).trim() !== group) continue;
+      if (round !== '' && String(row[iRound]).trim() !== round) continue;
+      if (field !== '' && String(row[iField]).trim() !== field) continue;
+
+      sheet.getRange(i + 1, iScoreH + 1).setValue(Number(scoreH));
+      sheet.getRange(i + 1, iScoreA + 1).setValue(Number(scoreA));
+      return jsonSuccess({ updated: true });
     }
 
-    return jsonError('Spiel nicht gefunden');
+    return jsonError('Spiel nicht gefunden (homeId=' + homeId + ', awayId=' + awayId + ')');
   } catch (err) {
     return jsonError('updateScore: ' + err.message);
   }
@@ -141,14 +267,14 @@ function updateScore(params) {
 function registerHelper(params) {
   try {
     var ss     = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet  = ss.getSheetByName('helfer');
-    if (!sheet) return jsonError('Sheet "helfer" nicht gefunden');
+    var sheet  = ss.getSheetByName('Helfer');
+    if (!sheet) return jsonError('Sheet "Helfer" nicht gefunden');
 
-    var schicht  = params.schicht  || '';
-    var aufgabe  = params.aufgabe  || '';
-    var name     = params.name     || '';
-    var kind     = params.kind     || '';
-    var email    = params.email    || '';
+    var schicht   = params.schicht  || '';
+    var aufgabe   = params.aufgabe  || '';
+    var name      = params.name     || '';
+    var kind      = params.kind     || '';
+    var email     = params.email    || '';
     var timestamp = new Date().toISOString();
 
     sheet.appendRow([schicht, aufgabe, name, kind, email, timestamp]);
@@ -169,8 +295,8 @@ function claimTask(params) {
     if (!taskName || !personName) return jsonError('taskName und personName erforderlich');
 
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('aufgaben');
-    if (!sheet) return jsonError('Sheet "aufgaben" nicht gefunden');
+    var sheet = ss.getSheetByName('Aufgaben');
+    if (!sheet) return jsonError('Sheet "Aufgaben" nicht gefunden');
 
     var data    = sheet.getDataRange().getValues();
     var headers = data[0];
@@ -195,8 +321,8 @@ function unclaimTask(params) {
     if (!taskName) return jsonError('taskName erforderlich');
 
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('aufgaben');
-    if (!sheet) return jsonError('Sheet "aufgaben" nicht gefunden');
+    var sheet = ss.getSheetByName('Aufgaben');
+    if (!sheet) return jsonError('Sheet "Aufgaben" nicht gefunden');
 
     var data    = sheet.getDataRange().getValues();
     var headers = data[0];
@@ -216,14 +342,13 @@ function unclaimTask(params) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// GENERATE HAUPTRUNDE  ← NEU
+// GENERATE HAUPTRUNDE
 // ──────────────────────────────────────────────────────────────
-
 /**
- * Berechnet aus den Vorrunden-Ergebnissen (matchesP1) die Tabellen
+ * Berechnet aus den Vorrunden-Ergebnissen (MatchesP1) die Tabellen
  * der vier Vorrunden-Gruppen (A–D), bildet daraus die fünf
  * Hauptrunden-Leveling-Gruppen (1–5) und schreibt den fertigen
- * Spielplan in das matchesP2-Sheet.
+ * Spielplan in das MatchesP2-Sheet.
  *
  * Aufruf via POST: action=generate_hauptrunde
  *
@@ -247,27 +372,25 @@ function unclaimTask(params) {
 function generateHauptrunde() {
   try {
     var ss         = SpreadsheetApp.getActiveSpreadsheet();
-    var p1Sheet    = ss.getSheetByName('matchesP1');
-    var p2Sheet    = ss.getSheetByName('matchesP2');
-    var teamsSheet = ss.getSheetByName('teams');
+    var p1Sheet    = ss.getSheetByName('MatchesP1');
+    var p2Sheet    = ss.getSheetByName('MatchesP2');
+    var teamsSheet = ss.getSheetByName('Teams');
 
-    if (!p1Sheet)    return jsonError('Sheet "matchesP1" nicht gefunden');
-    if (!p2Sheet)    return jsonError('Sheet "matchesP2" nicht gefunden');
-    if (!teamsSheet) return jsonError('Sheet "teams" nicht gefunden');
+    if (!p1Sheet)    return jsonError('Sheet "MatchesP1" nicht gefunden');
+    if (!p2Sheet)    return jsonError('Sheet "MatchesP2" nicht gefunden');
+    if (!teamsSheet) return jsonError('Sheet "Teams" nicht gefunden');
 
     // ── 1. Teams einlesen ────────────────────────────────────
     var teamsData = teamsSheet.getDataRange().getValues();
-    // Erwartete Spaltenreihenfolge: id | name | gruppe
-    // Robust auch bei abweichender Reihenfolge:
     var tHeaders = teamsData[0];
     var tId      = tHeaders.indexOf('id');
     var tName    = tHeaders.indexOf('name');
     var tGruppe  = tHeaders.indexOf('gruppe');
     if (tId < 0 || tName < 0 || tGruppe < 0) {
-      return jsonError('teams-Sheet: Spalten "id", "name", "gruppe" erwartet');
+      return jsonError('Teams-Sheet: Spalten "id", "name", "gruppe" erwartet');
     }
 
-    var teamMap = {}; // teamId (String) -> { id, name, gruppe }
+    var teamMap = {};
     for (var i = 1; i < teamsData.length; i++) {
       var tr = teamsData[i];
       if (tr[tId] === '' || tr[tId] === null || tr[tId] === undefined) continue;
@@ -286,14 +409,14 @@ function generateHauptrunde() {
       scoreA: p1Headers.indexOf('scoreA')
     };
     if (c.group < 0 || c.homeId < 0 || c.awayId < 0 || c.scoreH < 0 || c.scoreA < 0) {
-      return jsonError('matchesP1-Sheet: Spalten "group","homeId","awayId","scoreH","scoreA" erwartet');
+      return jsonError('MatchesP1-Sheet: Spalten "group","homeId","awayId","scoreH","scoreA" erwartet');
     }
 
     var matches = [];
     var missingScores = 0;
     for (var i = 1; i < p1Data.length; i++) {
       var row = p1Data[i];
-      if (!row[c.group] || !row[c.homeId]) continue; // Leerzeile überspringen
+      if (!row[c.group] || !row[c.homeId]) continue;
       var sh = row[c.scoreH];
       var sa = row[c.scoreA];
       if (sh === '' || sh === null || sh === undefined ||
@@ -320,15 +443,7 @@ function generateHauptrunde() {
     // ── 3. Tabellen berechnen (DFB-Sortierung) ───────────────
     var vorrundeGruppen = ['A', 'B', 'C', 'D'];
 
-    /**
-     * DFB-Sortierung:
-     *   1. Punkte absteigend  (Sieg=3, Unentschieden=1, Niederlage=0)
-     *   2. Tordifferenz absteigend
-     *   3. Geschossene Tore absteigend
-     *   4. Teamname alphabetisch aufsteigend
-     */
     function calcTable(groupLetter) {
-      // Teams dieser Gruppe initialisieren
       var table = {};
       Object.keys(teamMap).forEach(function(tid) {
         if (teamMap[tid].gruppe === groupLetter) {
@@ -343,7 +458,6 @@ function generateHauptrunde() {
         }
       });
 
-      // Ergebnisse einrechnen
       matches.forEach(function(m) {
         if (m.group !== groupLetter) return;
         var home = table[m.homeId];
@@ -367,7 +481,6 @@ function generateHauptrunde() {
         }
       });
 
-      // Sortierung
       var rows = Object.values(table);
       rows.sort(function(a, b) {
         if (b.points !== a.points) return b.points - a.points;
@@ -378,7 +491,7 @@ function generateHauptrunde() {
         return a.name.localeCompare(b.name, 'de');
       });
 
-      return rows; // index 0 = Platz 1
+      return rows;
     }
 
     var groupStandings = {};
@@ -387,8 +500,6 @@ function generateHauptrunde() {
     });
 
     // ── 4. Hauptrunden-Gruppen bilden ────────────────────────
-    // hauptrundeGroups[0] = Gruppe 1 (Erstplatzierte), etc.
-    // Je Gruppe: [TeamA, TeamB, TeamC, TeamD] in Reihenfolge A→B→C→D
     var hauptrundeGroups = [[], [], [], [], []];
     vorrundeGruppen.forEach(function(g) {
       var standings = groupStandings[g];
@@ -399,7 +510,6 @@ function generateHauptrunde() {
       }
     });
 
-    // Sicherstellen, dass jede Gruppe exakt 4 Teams hat
     for (var gi = 0; gi < 5; gi++) {
       if (hauptrundeGroups[gi].length !== 4) {
         return jsonError(
@@ -410,16 +520,8 @@ function generateHauptrunde() {
     }
 
     // ── 5. Spielplan generieren ──────────────────────────────
-    /**
-     * Paarungen für eine 4er-Gruppe [T1,T2,T3,T4] über 3 Spieltage:
-     *   Spieltag 1: T1 vs T2 + T3 vs T4
-     *   Spieltag 2: T1 vs T3 + T2 vs T4
-     *   Spieltag 3: T1 vs T4 + T2 vs T3
-     *
-     * fieldOffset: 0 → Felder 1+2, 2 → Felder 3+4
-     */
     function getGames(groupNum, spieltag, fieldOffset) {
-      var t = hauptrundeGroups[groupNum - 1]; // [T1, T2, T3, T4]
+      var t = hauptrundeGroups[groupNum - 1];
       var pairs;
       if (spieltag === 1) {
         pairs = [[t[0], t[1]], [t[2], t[3]]];
@@ -434,7 +536,6 @@ function generateHauptrunde() {
       ];
     }
 
-    // Optimaler Spielplan (8 Runden, Runden 11–18)
     var schedule = [
       { round: 11, games: getGames(1,1,0).concat(getGames(2,1,2)) },
       { round: 12, games: getGames(3,1,0).concat(getGames(4,1,2)) },
@@ -443,10 +544,10 @@ function generateHauptrunde() {
       { round: 15, games: getGames(5,3,0).concat(getGames(3,2,2)) },
       { round: 16, games: getGames(1,3,0).concat(getGames(4,2,2)) },
       { round: 17, games: getGames(2,3,0).concat(getGames(3,3,2)) },
-      { round: 18, games: getGames(4,3,0) }  // nur 2 Felder
+      { round: 18, games: getGames(4,3,0) }
     ];
 
-    // ── 6. matchesP2-Sheet befüllen ──────────────────────────
+    // ── 6. MatchesP2-Sheet befüllen ──────────────────────────
     var rows = [['group', 'round', 'field', 'homeId', 'awayId', 'scoreH', 'scoreA']];
     schedule.forEach(function(rd) {
       rd.games.forEach(function(g) {
@@ -488,7 +589,6 @@ function readSheet(ss, name, expectedHeaders) {
   var result  = [];
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    // Leerzeilen überspringen
     if (row.every(function(v) { return v === '' || v === null || v === undefined; })) continue;
     var obj = {};
     headers.forEach(function(h, idx) {
@@ -500,16 +600,16 @@ function readSheet(ss, name, expectedHeaders) {
   return result;
 }
 
-/** Liest das config-Sheet und gibt ein flaches Objekt zurück */
+/** Liest das Config-Sheet und gibt ein flaches Objekt zurück */
 function readConfig(ss) {
-  var sheet = ss.getSheetByName('config');
+  var sheet = ss.getSheetByName('Config');
   if (!sheet) return {};
   var data = sheet.getDataRange().getValues();
   var config = {};
   // Zwei mögliche Formate:
-  //   Format A: Header-Zeile (key) + Wert-Zeile (value)
+  //   Format A: Header-Zeile (key) + Wert-Zeile (value)  →  tournamentName | tournamentDate | logoClub | ...
   //   Format B: Zwei Spalten key | value pro Zeile
-  if (data.length >= 2 && data[0].length > 1 && data[1].length > 1) {
+  if (data.length >= 2 && data[0].length > 2) {
     // Format A: erste Zeile = Keys, zweite Zeile = Werte
     var keys   = data[0];
     var values = data[1];
@@ -518,9 +618,11 @@ function readConfig(ss) {
     });
   } else {
     // Format B: key-value-Paare pro Zeile
-    data.forEach(function(row) {
-      if (row[0]) config[String(row[0]).trim()] = row[1] !== undefined ? row[1] : '';
-    });
+    for (var r = 1; r < data.length; r++) {
+      var key = data[r][0];
+      var val = data[r][1];
+      if (key) config[String(key).trim()] = val !== undefined ? val : '';
+    }
   }
   return config;
 }
