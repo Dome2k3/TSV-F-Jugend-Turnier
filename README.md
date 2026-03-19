@@ -46,3 +46,18 @@ gantt
     Abbau & Aufräumen        :active, e2, 14:30, 1h
     Helfer-Ausklang          :milestone, 14:30, 0m
 ```
+
+Übersicht:
+
+Runde	Feld 1	Feld 2	Feld 3	Feld 4	Pause
+1	A: 1v2	A: 3v4	B: 6v7	B: 8v9	A:5 B:10
+2	C: 11v12	C: 13v14	D: 16v17	D: 18v19	C:15 D:20
+3	A: 1v3	A: 2v5	B: 6v8	B: 7v10	A:4 B:9
+4	C: 11v13	C: 12v15	D: 16v18	D: 17v20	C:14 D:19
+5	A: 1v4	A: 3v5	B: 6v9	B: 8v10	A:2 B:7
+6	C: 11v14	C: 13v15	D: 16v19	D: 18v20	C:12 D:17
+7	A: 1v5	A: 2v4	B: 6v10	B: 7v9	A:3 B:8
+8	C: 11v15	C: 12v14	D: 16v20	D: 17v19	C:13 D:18
+9	A: 2v3	A: 4v5	B: 7v8	B: 9v10	A:1 B:6
+10	C: 12v13	C: 14v15	D: 17v18	D: 19v20	C:11 D:16
+✅ Alle 4 Felder jede Runde belegt ✅ Alle Gruppen abwechselnd (A+B, dann C+D, dann A+B…) ✅ Kein Team wartet länger als 1 Runde (jede Gruppe spielt jede 2. Runde) ✅ Jedes Team pausiert genau 1× innerhalb seiner 5 Gruppenspielrunden ✅ 10 Runden für alle 40 Spiele
