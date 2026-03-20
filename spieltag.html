@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Jugend Sommer-Cup – Spieltag</title>
+    <title>TSV Auerbach F Jugend Sommer-Cup – Spieltag</title>
     <style>
         :root {
-            --grass: #2ecc71;
-            --dark-green: #27ae60;
+            --grass: #e8152c;
+            --dark-green: #c0392b;
             --text: #2c3e50;
             --bg: #0d1117;
             --card-bg: #161b22;
@@ -15,8 +15,8 @@
             --gold: #f1c40f;
             --silver: #bdc3c7;
             --bronze: #cd6c2e;
-            --win: #1a6b2a;
-            --loss: #6b1a1a;
+            --win: #6b1a1a;
+            --loss: #1a1a1a;
         }
 
         * { box-sizing: border-box; }
@@ -31,7 +31,7 @@
 
         /* ── HEADER ──────────────────────────────────────────── */
         header {
-            background: linear-gradient(135deg, #0d4f2c 0%, #1a7a44 50%, #0d4f2c 100%);
+            background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%);
             padding: 16px 24px;
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -112,7 +112,7 @@
             background: var(--grass);
             color: #0d1117;
         }
-        .phase-btn:hover:not(.active) { background: rgba(46,204,113,0.15); }
+        .phase-btn:hover:not(.active) { background: rgba(232,21,44,0.15); }
 
         /* ── MAIN LAYOUT ─────────────────────────────────────── */
         .main-grid {
@@ -150,7 +150,7 @@
         /* ── GROUPS GRID ─────────────────────────────────────── */
         .groups-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
@@ -259,9 +259,9 @@
         .match-row:last-child { border-bottom: none; }
 
         .field-badge {
-            background: rgba(46,204,113,0.15);
+            background: rgba(232,21,44,0.15);
             color: var(--grass);
-            border: 1px solid rgba(46,204,113,0.3);
+            border: 1px solid rgba(232,21,44,0.3);
             border-radius: 4px;
             text-align: center;
             font-size: 0.7rem;
@@ -288,7 +288,7 @@
             color: #fff;
             border: 1px solid var(--border);
         }
-        .score-box.played { background: rgba(46,204,113,0.1); border-color: rgba(46,204,113,0.3); }
+        .score-box.played { background: rgba(232,21,44,0.1); border-color: rgba(232,21,44,0.3); }
         .score-box.pending { color: #8b949e; }
 
         /* ── REFRESH INDICATOR ───────────────────────────────── */
@@ -323,7 +323,7 @@
             display: inline-block;
             width: 32px;
             height: 32px;
-            border: 3px solid rgba(46,204,113,0.2);
+            border: 3px solid rgba(232,21,44,0.2);
             border-top-color: var(--grass);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -360,7 +360,7 @@
             transition: background 0.2s;
             z-index: 200;
         }
-        .tv-btn:hover { background: #1e8449; }
+        .tv-btn:hover { background: #a93226; }
 
         /* ── EMPTY STATE ─────────────────────────────────────── */
         .empty-state {
@@ -400,7 +400,7 @@
 
     <!-- Center: Tournament title -->
     <div class="header-center">
-        <h1 id="tournament-title">⚽ Sommer-Cup</h1>
+        <h1 id="tournament-title">⚽ TSV Auerbach F Jugend Sommer-Cup</h1>
         <div class="date-badge" id="tournament-date">Samstag, 20.06.2026</div>
     </div>
 
@@ -627,7 +627,7 @@
             const groupTeams = [...teamIds].map(id => teams[id]).filter(Boolean);
             if (groupTeams.length === 0) return;
             anyGroup = true;
-            container.appendChild(buildGroupCard(g, groupTeams, groupMatches, groupNames[g] || ('Gruppe ' + g)));
+            container.appendChild(buildGroupCard(g, groupTeams, groupMatches, groupNames[g] || ('Gruppe ' + g), false));
         });
 
         if (!anyGroup) {
@@ -638,7 +638,7 @@
     // ──────────────────────────────────────────────────────────────
     // BUILD GROUP CARD (shared for Vorrunde + Hauptrunde)
     // ──────────────────────────────────────────────────────────────
-    function buildGroupCard(groupKey, groupTeams, groupMatches, labelPrefix) {
+    function buildGroupCard(groupKey, groupTeams, groupMatches, labelPrefix, appendKey = true) {
         const table = calculateTable(groupTeams, groupMatches);
 
         const card = document.createElement('div');
@@ -646,7 +646,7 @@
 
         const title = document.createElement('div');
         title.className = 'group-label';
-        title.innerHTML = `<span class="group-badge">${escHtml(groupKey)}</span>${escHtml(labelPrefix)} ${escHtml(groupKey)}`;
+        title.innerHTML = `<span class="group-badge">${escHtml(groupKey)}</span>${escHtml(labelPrefix)}${appendKey ? ' ' + escHtml(groupKey) : ''}`;
         card.appendChild(title);
 
         const tbl = document.createElement('table');
