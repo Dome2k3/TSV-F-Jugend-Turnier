@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnierverwaltung – F-Jugend Sommer-Cup</title>
+    <title>Turnierverwaltung – TSV Auerbach F Jugend Sommer-Cup</title>
     <style>
         :root {
-            --grass: #2ecc71;
-            --dark-green: #27ae60;
+            --grass: #e8152c;
+            --dark-green: #c0392b;
             --bg: #0d1117;
             --card-bg: #161b22;
             --border: #30363d;
@@ -28,7 +28,7 @@
 
         /* ── HEADER ── */
         header {
-            background: linear-gradient(135deg, #0d4f2c 0%, #1a7a44 50%, #0d4f2c 100%);
+            background: linear-gradient(135deg, #000000 0%, #1a0000 50%, #000000 100%);
             padding: 16px 24px;
             border-bottom: 3px solid var(--grass);
             text-align: center;
@@ -64,7 +64,7 @@
         .phase-btn:first-child { border-radius: 8px 0 0 8px; }
         .phase-btn:last-child  { border-radius: 0 8px 8px 0; border-left: none; }
         .phase-btn.active { background: var(--grass); color: #0d1117; }
-        .phase-btn:hover:not(.active) { background: rgba(46,204,113,0.15); }
+        .phase-btn:hover:not(.active) { background: rgba(232,21,44,0.15); }
 
         /* ── MAIN ── */
         .main-content {
@@ -75,8 +75,8 @@
 
         /* ── INFO BANNER ── */
         .info-banner {
-            background: rgba(46,204,113,0.08);
-            border: 1px solid rgba(46,204,113,0.25);
+            background: rgba(232,21,44,0.08);
+            border: 1px solid rgba(232,21,44,0.25);
             border-radius: 10px;
             padding: 14px 18px;
             margin-bottom: 20px;
@@ -155,7 +155,7 @@
         .score-input:focus {
             outline: none;
             border-color: var(--grass);
-            background: rgba(46,204,113,0.08);
+            background: rgba(232,21,44,0.08);
         }
         .score-separator {
             color: #8b949e;
@@ -175,12 +175,12 @@
             transition: background 0.2s, opacity 0.2s;
             white-space: nowrap;
         }
-        .btn-save:hover { background: #1e8449; }
+        .btn-save:hover { background: #a93226; }
         .btn-save:disabled { opacity: 0.5; cursor: wait; }
         .btn-save.saved {
-            background: rgba(46,204,113,0.2);
+            background: rgba(232,21,44,0.2);
             color: var(--grass);
-            border: 1px solid rgba(46,204,113,0.4);
+            border: 1px solid rgba(232,21,44,0.4);
         }
         .btn-save.error {
             background: rgba(231,76,60,0.2);
@@ -190,9 +190,9 @@
 
         /* ── FIELD BADGE ── */
         .field-badge {
-            background: rgba(46,204,113,0.12);
+            background: rgba(232,21,44,0.12);
             color: var(--grass);
-            border: 1px solid rgba(46,204,113,0.3);
+            border: 1px solid rgba(232,21,44,0.3);
             border-radius: 4px;
             font-size: 0.7rem;
             font-weight: 700;
@@ -212,7 +212,7 @@
             display: inline-block;
             width: 32px;
             height: 32px;
-            border: 3px solid rgba(46,204,113,0.2);
+            border: 3px solid rgba(232,21,44,0.2);
             border-top-color: var(--grass);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -305,12 +305,16 @@
 
 <header>
     <h1>🏆 Turnierverwaltung</h1>
-    <div class="subtitle" id="header-subtitle">F-Jugend Sommer-Cup</div>
+    <div class="subtitle" id="header-subtitle">TSV Auerbach F Jugend Sommer-Cup</div>
 </header>
 
 <div class="phase-nav">
     <button class="phase-btn active" id="btn-vorrunde" onclick="switchPhase('vorrunde')">Vorrunde</button>
     <button class="phase-btn" id="btn-hauptrunde" onclick="switchPhase('hauptrunde')">Hauptrunde</button>
+</div>
+
+<div style="text-align:center; padding: 8px 0 0;">
+    <a href="spieltag.html" class="back-link">← Zurück zur Anzeigetafel</a>
 </div>
 
 <div class="main-content">
@@ -340,6 +344,10 @@
                 <button class="btn-generate" id="btn-generate-hauptrunde" onclick="generateHauptrunde()">🔄 Hauptrunde generieren</button>
             </div>
             <div id="hauptrunde-matches"></div>
+        </div>
+
+        <div style="text-align:center; margin-bottom: 16px;">
+            <a href="spieltag.html" class="back-link">← Zurück zur Anzeigetafel</a>
         </div>
 
         <div class="save-all-wrap">
@@ -484,8 +492,8 @@
                 if (scoreH !== '' && scoreA !== '') {
                     const shInput = row.querySelector(`#sh-${CSS.escape(matchId)}`);
                     const saInput = row.querySelector(`#sa-${CSS.escape(matchId)}`);
-                    if (shInput) shInput.style.borderColor = 'rgba(46,204,113,0.4)';
-                    if (saInput) saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+                    if (shInput) shInput.style.borderColor = 'rgba(232,21,44,0.4)';
+                    if (saInput) saInput.style.borderColor = 'rgba(232,21,44,0.4)';
                 }
 
                 card.appendChild(row);
@@ -551,8 +559,8 @@
 
             btn.textContent = '✅';
             btn.className = 'btn-save saved';
-            shInput.style.borderColor = 'rgba(46,204,113,0.4)';
-            saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+            shInput.style.borderColor = 'rgba(232,21,44,0.4)';
+            saInput.style.borderColor = 'rgba(232,21,44,0.4)';
 
             setTimeout(() => {
                 btn.textContent = 'Speichern';
@@ -598,8 +606,8 @@
 
             if (json.result === 'success') {
                 btn.textContent = '✅ Erfolgreich!';
-                btn.style.color       = '#2ecc71';
-                btn.style.borderColor = '#2ecc71';
+                btn.style.color       = '#e8152c';
+                btn.style.borderColor = '#e8152c';
                 setTimeout(() => location.reload(), 1200);
             } else {
                 const msg = (json.message || (json.data && json.data.message)) || 'Unbekannter Fehler';
@@ -667,8 +675,8 @@
                 await fetch(API_URL, { method: 'POST', body: data });
                 saved++;
 
-                shInput.style.borderColor = 'rgba(46,204,113,0.4)';
-                saInput.style.borderColor = 'rgba(46,204,113,0.4)';
+                shInput.style.borderColor = 'rgba(232,21,44,0.4)';
+                saInput.style.borderColor = 'rgba(232,21,44,0.4)';
 
             } catch (err) {
                 errors++;
