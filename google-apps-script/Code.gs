@@ -19,9 +19,6 @@
 // ──────────────────────────────────────────────────────────────
 
 function doGet(e) {
-  var lock = LockService.getPublicLock();
-  lock.waitLock(30000);
-
   try {
     var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
 
@@ -38,8 +35,6 @@ function doGet(e) {
 
   } catch (err) {
     return jsonError('doGet: ' + err.toString());
-  } finally {
-    lock.releaseLock();
   }
 }
 
@@ -176,8 +171,20 @@ function getDefaultHelferAufgaben() {
 // GET TOURNAMENT DATA
 // ──────────────────────────────────────────────────────────────
 
+var TOURNAMENT_CACHE_KEY = 'tournament_data_v1';
+var TOURNAMENT_CACHE_TTL = 30; // seconds
+
 function getTournamentData() {
   try {
+    // Serve from cache if available (reduces Sheets read latency)
+    var cache = CacheService.getPublicCache();
+    var cached = cache.get(TOURNAMENT_CACHE_KEY);
+    if (cached) {
+      return ContentService
+        .createTextOutput(cached)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     var config    = readConfig(ss);
@@ -187,17 +194,33 @@ function getTournamentData() {
     var helfer    = readSheet(ss, 'Helfer',    ['schicht','aufgabe','name','kind','email','timestamp']);
     var aufgaben  = readSheet(ss, 'Aufgaben',  ['item','wer']);
 
-    return jsonSuccess({
-      config:    config,
-      teams:     teams,
-      matchesP1: matchesP1,
-      matchesP2: matchesP2,
-      helfer:    helfer,
-      aufgaben:  aufgaben
+    var payload = JSON.stringify({
+      result: 'success',
+      data: {
+        config:    config,
+        teams:     teams,
+        matchesP1: matchesP1,
+        matchesP2: matchesP2,
+        helfer:    helfer,
+        aufgaben:  aufgaben
+      }
     });
+
+    // Cache for a short period to speed up concurrent/repeated requests
+    try { cache.put(TOURNAMENT_CACHE_KEY, payload, TOURNAMENT_CACHE_TTL); } catch (ignore) {}
+
+    return ContentService
+      .createTextOutput(payload)
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return jsonError('getTournamentData: ' + err.message);
   }
+}
+
+function invalidateTournamentCache() {
+  try {
+    CacheService.getPublicCache().remove(TOURNAMENT_CACHE_KEY);
+  } catch (ignore) {}
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -251,6 +274,7 @@ function updateScore(params) {
 
       sheet.getRange(i + 1, iScoreH + 1).setValue(Number(scoreH));
       sheet.getRange(i + 1, iScoreA + 1).setValue(Number(scoreA));
+      invalidateTournamentCache();
       return jsonSuccess({ updated: true });
     }
 
@@ -558,6 +582,7 @@ function generateHauptrunde() {
     p2Sheet.clearContents();
     p2Sheet.getRange(1, 1, rows.length, 7).setValues(rows);
 
+    invalidateTournamentCache();
     return jsonSuccess({
       message:    'Hauptrunde erfolgreich generiert',
       matchCount: rows.length - 1,
