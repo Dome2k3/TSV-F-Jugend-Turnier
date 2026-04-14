@@ -188,10 +188,10 @@
             }
         }
 
-        /* Large desktop (sidebar + content area > ~1000px): up to 3 columns */
+        /* Large desktop: keep 2 columns so 4 groups display in a 2×2 grid */
         @media (min-width: 1400px) {
             .groups-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -255,10 +255,8 @@
             text-align: left;
             font-weight: 600;
             color: var(--text);
-            max-width: 110px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            min-width: 80px;
+            word-break: break-word;
         }
         .standings-table td.pts {
             font-weight: 800;
