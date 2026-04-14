@@ -19,6 +19,9 @@
 // ──────────────────────────────────────────────────────────────
 
 function doGet(e) {
+  var lock = LockService.getPublicLock();
+  lock.waitLock(30000);
+
   try {
     var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
 
@@ -35,6 +38,8 @@ function doGet(e) {
 
   } catch (err) {
     return jsonError('doGet: ' + err.toString());
+  } finally {
+    lock.releaseLock();
   }
 }
 
@@ -102,7 +107,7 @@ function getDebugData() {
       });
     }
   } else {
-    debugResult.teamsRaw = ["Sheet 'Teams' NOT FOUND"]; 
+    debugResult.teamsRaw = ["Sheet 'Teams' NOT FOUND"];
   }
 
   var mp1Sheet = ss.getSheetByName('MatchesP1');
@@ -119,7 +124,7 @@ function getDebugData() {
       });
     }
   } else {
-    debugResult.matchesP1Raw = ["Sheet 'MatchesP1' NOT FOUND"]; 
+    debugResult.matchesP1Raw = ["Sheet 'MatchesP1' NOT FOUND"];
   }
 
   return ContentService
@@ -135,16 +140,19 @@ function getDefaultHelferAufgaben() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
   var helferData = [];
-  var sheetHelfer = ss.getSheetByName('Teilnehmer');
+  // ✅ FIX: 'Teilnehmer' → 'Helfer' (umbenanntes Sheet)
+  var sheetHelfer = ss.getSheetByName('Helfer');
   if (sheetHelfer) {
     var rowsHelfer = sheetHelfer.getDataRange().getValues();
+    // Helfer-Sheet: schicht | aufgabe | name | kind | email | timestamp
+    //               [0]       [1]       [2]    [3]    [4]     [5]
     for (var i = 1; i < rowsHelfer.length; i++) {
-      if (rowsHelfer[i][1]) {
+      if (rowsHelfer[i][2]) {  // ✅ FIX: Spalte [2] = name (war [1])
         helferData.push({
-          name:    rowsHelfer[i][1],
+          name:    rowsHelfer[i][2],
           kind:    rowsHelfer[i][3],
-          schicht: rowsHelfer[i][4],
-          aufgabe: rowsHelfer[i][5]
+          schicht: rowsHelfer[i][0],  // ✅ FIX: schicht ist Spalte [0]
+          aufgabe: rowsHelfer[i][1]   // ✅ FIX: aufgabe ist Spalte [1]
         });
       }
     }
@@ -171,20 +179,8 @@ function getDefaultHelferAufgaben() {
 // GET TOURNAMENT DATA
 // ──────────────────────────────────────────────────────────────
 
-var TOURNAMENT_CACHE_KEY = 'tournament_data_v1';
-var TOURNAMENT_CACHE_TTL = 30; // seconds
-
 function getTournamentData() {
   try {
-    // Serve from cache if available (reduces Sheets read latency)
-    var cache = CacheService.getPublicCache();
-    var cached = cache.get(TOURNAMENT_CACHE_KEY);
-    if (cached) {
-      return ContentService
-        .createTextOutput(cached)
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
     var ss = SpreadsheetApp.getActiveSpreadsheet();
 
     var config    = readConfig(ss);
@@ -194,33 +190,17 @@ function getTournamentData() {
     var helfer    = readSheet(ss, 'Helfer',    ['schicht','aufgabe','name','kind','email','timestamp']);
     var aufgaben  = readSheet(ss, 'Aufgaben',  ['item','wer']);
 
-    var payload = JSON.stringify({
-      result: 'success',
-      data: {
-        config:    config,
-        teams:     teams,
-        matchesP1: matchesP1,
-        matchesP2: matchesP2,
-        helfer:    helfer,
-        aufgaben:  aufgaben
-      }
+    return jsonSuccess({
+      config:    config,
+      teams:     teams,
+      matchesP1: matchesP1,
+      matchesP2: matchesP2,
+      helfer:    helfer,
+      aufgaben:  aufgaben
     });
-
-    // Cache for a short period to speed up concurrent/repeated requests
-    try { cache.put(TOURNAMENT_CACHE_KEY, payload, TOURNAMENT_CACHE_TTL); } catch (ignore) {}
-
-    return ContentService
-      .createTextOutput(payload)
-      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return jsonError('getTournamentData: ' + err.message);
   }
-}
-
-function invalidateTournamentCache() {
-  try {
-    CacheService.getPublicCache().remove(TOURNAMENT_CACHE_KEY);
-  } catch (ignore) {}
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -274,7 +254,6 @@ function updateScore(params) {
 
       sheet.getRange(i + 1, iScoreH + 1).setValue(Number(scoreH));
       sheet.getRange(i + 1, iScoreA + 1).setValue(Number(scoreA));
-      invalidateTournamentCache();
       return jsonSuccess({ updated: true });
     }
 
@@ -314,8 +293,8 @@ function registerHelper(params) {
 
 function claimTask(params) {
   try {
-    var taskName   = params.taskName   || '';
-    var personName = params.personName || '';
+    var taskName   = (params.taskName   || '').trim();
+    var personName = (params.personName || '').trim();
     if (!taskName || !personName) return jsonError('taskName und personName erforderlich');
 
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
@@ -323,16 +302,33 @@ function claimTask(params) {
     if (!sheet) return jsonError('Sheet "Aufgaben" nicht gefunden');
 
     var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-    var iItem   = headers.indexOf('item');
-    var iWer    = headers.indexOf('wer');
+    if (data.length < 2) return jsonError('Sheet "Aufgaben" ist leer');
+
+    var headers = data[0].map(h => String(h || '').trim());
+
+    // ✅ akzeptiere beide Header-Namen
+    var iItem = headers.indexOf('item');
+    if (iItem < 0) iItem = headers.indexOf('Aufgabe');
+
+    var iWer = headers.indexOf('wer');
+    if (iWer < 0) iWer = headers.indexOf('Wer');
+
+    if (iItem < 0) return jsonError('Aufgaben-Sheet: Spalte "Aufgabe" (oder "item") nicht gefunden');
+    if (iWer < 0)  return jsonError('Aufgaben-Sheet: Spalte "Wer" (oder "wer") nicht gefunden');
 
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][iItem]) === taskName) {
+      var cellTask = String(data[i][iItem] || '').trim();
+      if (!cellTask) continue;
+
+      // optional: Überschriftszeilen ignorieren
+      if (cellTask.indexOf('---') === 0) continue;
+
+      if (cellTask === taskName) {
         sheet.getRange(i + 1, iWer + 1).setValue(personName);
         return jsonSuccess({ claimed: true });
       }
     }
+
     return jsonError('Aufgabe nicht gefunden: ' + taskName);
   } catch (err) {
     return jsonError('claimTask: ' + err.message);
@@ -341,24 +337,64 @@ function claimTask(params) {
 
 function unclaimTask(params) {
   try {
-    var taskName = params.taskName || '';
+    var taskName = (params.taskName || '').trim();
     if (!taskName) return jsonError('taskName erforderlich');
 
     var ss    = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('Aufgaben');
     if (!sheet) return jsonError('Sheet "Aufgaben" nicht gefunden');
 
-    var data    = sheet.getDataRange().getValues();
-    var headers = data[0];
-    var iItem   = headers.indexOf('item');
-    var iWer    = headers.indexOf('wer');
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) return jsonError('Sheet "Aufgaben" ist leer');
+
+    var headers = data[0].map(h => String(h || '').trim());
+
+    // Aufgabe/item
+    var iItem = headers.indexOf('item');
+    if (iItem < 0) iItem = headers.indexOf('Aufgabe');
+
+    // Wer/wer
+    var iWer = headers.indexOf('wer');
+    if (iWer < 0) iWer = headers.indexOf('Wer');
+
+    // Davor/davor
+    var iDavor = headers.indexOf('davor');
+    if (iDavor < 0) iDavor = headers.indexOf('Davor');
+
+    if (iItem < 0)  return jsonError('Aufgaben-Sheet: Spalte "Aufgabe" (oder "item") nicht gefunden');
+    if (iWer < 0)   return jsonError('Aufgaben-Sheet: Spalte "Wer" (oder "wer") nicht gefunden');
+    if (iDavor < 0) return jsonError('Aufgaben-Sheet: Spalte "Davor" (oder "davor") nicht gefunden');
 
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][iItem]) === taskName) {
+      var cellTask = String(data[i][iItem] || '').trim();
+      if (!cellTask) continue;
+      if (cellTask.indexOf('---') === 0) continue;
+
+      if (cellTask === taskName) {
+        var currentWer = String(data[i][iWer] || '').trim();
+
+        // Wenn sowieso keiner eingetragen ist, nur "Wer" leeren (ist eh leer) und fertig.
+        if (!currentWer) {
+          sheet.getRange(i + 1, iWer + 1).setValue('');
+          return jsonSuccess({ unclaimed: true, previous: '' });
+        }
+
+        // ✅ Historie: bisherigen Wer-Eintrag nach Davor (anhängen)
+        var ts = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "yyyy-MM-dd HH:mm");
+        var historyEntry = currentWer + " (" + ts + ")";
+
+        var existingHistory = String(data[i][iDavor] || '').trim();
+        var newHistory = existingHistory ? (existingHistory + "\n" + historyEntry) : historyEntry;
+
+        sheet.getRange(i + 1, iDavor + 1).setValue(newHistory);
+
+        // ✅ jetzt austragen
         sheet.getRange(i + 1, iWer + 1).setValue('');
-        return jsonSuccess({ unclaimed: true });
+
+        return jsonSuccess({ unclaimed: true, previous: currentWer });
       }
     }
+
     return jsonError('Aufgabe nicht gefunden: ' + taskName);
   } catch (err) {
     return jsonError('unclaimTask: ' + err.message);
@@ -368,6 +404,7 @@ function unclaimTask(params) {
 // ──────────────────────────────────────────────────────────────
 // GENERATE HAUPTRUNDE
 // ──────────────────────────────────────────────────────────────
+
 /**
  * Berechnet aus den Vorrunden-Ergebnissen (MatchesP1) die Tabellen
  * der vier Vorrunden-Gruppen (A–D), bildet daraus die fünf
@@ -582,7 +619,6 @@ function generateHauptrunde() {
     p2Sheet.clearContents();
     p2Sheet.getRange(1, 1, rows.length, 7).setValues(rows);
 
-    invalidateTournamentCache();
     return jsonSuccess({
       message:    'Hauptrunde erfolgreich generiert',
       matchCount: rows.length - 1,
