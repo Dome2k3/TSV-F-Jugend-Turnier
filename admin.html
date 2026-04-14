@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin – TSV Auerbach F Jugend Sommer-Cup</title>
+    <style>
+        :root {
+            --grass: #e8152c;
+            --dark-green: #c0392b;
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 32px;
+            color: var(--grass);
+            text-align: center;
+        }
+
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .admin-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 24px;
+            text-decoration: none;
+            color: #e6edf3;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .admin-link:hover {
+            border-color: var(--grass);
+            background: #1e2530;
+        }
+
+        .admin-link .icon {
+            font-size: 1.5rem;
+            width: 36px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>⚙️ Admin-Bereich</h1>
+
+<div class="links">
+    <a href="index.html" class="admin-link">
+        <span class="icon">⚽</span>
+        <span>Anzeigetafel (Spieltag)</span>
+    </a>
+    <a href="helferseite.html" class="admin-link">
+        <span class="icon">🔧</span>
+        <span>Helfer-Bereich</span>
+    </a>
+    <a href="verwaltung.html" class="admin-link">
+        <span class="icon">🏆</span>
+        <span>Turnierleitung / Verwaltung</span>
+    </a>
+</div>
+
+</body>
+</html>
