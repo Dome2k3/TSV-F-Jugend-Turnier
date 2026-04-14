@@ -411,7 +411,7 @@
 
         /* ── SPONSOR FOOTER ──────────────────────────────────── */
         .sponsor-footer {
-            display: flex;
+            display: none; /* shown only on mobile via media query */
             justify-content: center;
             align-items: center;
             gap: 16px;
@@ -419,6 +419,9 @@
             background: #fff;
             border-top: 2px solid var(--border);
             margin-top: 16px;
+        }
+        @media (max-width: 599px) {
+            .sponsor-footer { display: flex; }
         }
         .footer-sponsor-placeholder {
             height: 44px;
@@ -612,8 +615,13 @@
         setLogo('club-logo-placeholder', 'logo-left', config.logoClub, 'club-logo');
         setLogo('sponsor1-placeholder', 'logo-right', config.logoSponsor1, 'sponsor1-logo', true);
         setLogo('sponsor2-placeholder', 'logo-right', config.logoSponsor2, 'sponsor2-logo', true);
-        setFooterSponsor('footer-sponsor1-placeholder', config.logoSponsor1, 'footer-sponsor1-img');
-        setFooterSponsor('footer-sponsor2-placeholder', config.logoSponsor2, 'footer-sponsor2-img');
+        if (!config.logoSponsor1 && !config.logoSponsor2) {
+            const footer = document.querySelector('.sponsor-footer');
+            if (footer) footer.style.display = 'none';
+        } else {
+            setFooterSponsor('footer-sponsor1-placeholder', config.logoSponsor1, 'footer-sponsor1-img');
+            setFooterSponsor('footer-sponsor2-placeholder', config.logoSponsor2, 'footer-sponsor2-img');
+        }
     }
 
     function setFooterSponsor(placeholderId, url, imgId) {
