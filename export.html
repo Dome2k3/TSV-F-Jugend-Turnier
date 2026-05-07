@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Druck / Export – Turnier</title>
+    <style>
+        :root { --line:#cfcfcf; --accent:#e8152c; --bg:#f2f2f2; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color:#111; }
+        .toolbar { position: sticky; top: 0; z-index: 3; display:flex; gap:10px; justify-content:center; padding:10px; background:#fff; border-bottom:1px solid #ddd; }
+        .toolbar button, .toolbar a { border:1px solid #888; background:#fff; border-radius:6px; padding:8px 12px; cursor:pointer; text-decoration:none; color:#111; font-size:14px; }
+        .toolbar button:hover, .toolbar a:hover { border-color: var(--accent); color: var(--accent); }
+        .page { width: 210mm; min-height: 297mm; margin: 10px auto; padding: 10mm; background:#fff; border:1px solid #ddd; }
+        .page-break { page-break-before: always; }
+        .header { display:grid; grid-template-columns:100px 1fr 130px; gap:10px; align-items:center; border-bottom:2px solid #000; padding-bottom:8px; }
+        .logo-slot { width:100%; height:68px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; background:#fafafa; }
+        .logo-slot img { max-width:100%; max-height:100%; object-fit:contain; }
+        .title { text-align:center; }
+        .title h1 { margin:0; font-size:22px; }
+        .title p { margin:4px 0 0; font-size:12px; color:#666; }
+        .section { margin-top:12px; page-break-inside: avoid; }
+        .section h2 { margin:0 0 6px; font-size:15px; border-bottom:1px solid #000; padding-bottom:4px; }
+        .info-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; font-size:12px; }
+        .info-box { border:1px solid var(--line); padding:8px; background:#fafafa; min-height:66px; }
+        .twocol { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .group-grid-4 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .group-grid-5 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+        table { width:100%; border-collapse:collapse; font-size:11px; }
+        th, td { border:1px solid var(--line); padding:4px; text-align:left; vertical-align:top; }
+        th { background:#f5f5f5; }
+        .small { font-size:10px; color:#666; }
+        .center { text-align:center; }
+        .sieg { min-height:120px; border:2px dashed #999; padding:12px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#444; }
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background:#fff; }
+            .toolbar { display:none !important; }
+            .page { margin:0; border:none; width:auto; min-height:auto; padding:0; }
+            .section, table, tr, td, th { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="toolbar no-print">
+    <button onclick="window.print()">🖨️ Drucken / Als PDF speichern</button>
+    <a href="verwaltung.html">← Zur Verwaltung</a>
+    <button onclick="loadData()">⟳ Neu laden</button>
+</div>
+
+<main id="print-root">
+    <div class="page">
+        <div class="header">
+            <div class="logo-slot" id="logo-left">Logo</div>
+            <div class="title">
+                <h1 id="tournament-title">Turnier Export</h1>
+                <p id="tournament-subtitle">Druckansicht</p>
+            </div>
+            <div class="logo-slot" id="logo-right">Logo</div>
+        </div>
+
+        <section class="section">
+            <h2>Turnierinformationen</h2>
+            <div class="info-grid" id="info-grid"></div>
+        </section>
+
+        <section class="section">
+            <h2>Teilnehmerlisten Vorrunde (Gruppen A–D)</h2>
+            <div class="group-grid-4" id="participants-p1"></div>
+        </section>
+
+        <section class="section">
+            <h2>Vorrunden-Spielplan</h2>
+            <div id="schedule-p1"></div>
+        </section>
+    </div>
+
+    <div class="page page-break">
+        <section class="section">
+            <h2>Tabellen Vorrunde</h2>
+            <div class="group-grid-4" id="tables-p1"></div>
+        </section>
+
+        <section class="section">
+            <h2>Hauptrunden-Spielplan (5 Felder)</h2>
+            <div id="schedule-p2"></div>
+        </section>
+
+        <section class="section">
+            <h2>Tabellen Hauptrunde (Gruppen 1–5)</h2>
+            <div class="group-grid-5" id="tables-p2"></div>
+        </section>
+
+        <section class="section">
+            <h2>Siegerehrung</h2>
+            <div class="sieg">🏆 Siegerehrung</div>
+        </section>
+    </div>
+</main>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const MINUTES_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR;
+const DEFAULTS = {
+    startTime: '10:00',
+    matchMinutes: 10,
+    breakMinutes: 2,
+    breakAfterP1: 20,
+    fieldCountP1: 4,
+    fieldCountP2: 5
+};
+
+function escHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toNumber(value, fallback) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function parseTimeToMinutes(value, fallback) {
+    if (typeof value === 'number') {
+        if (value > 0 && value < 1) return Math.round(value * MINUTES_PER_DAY);
+        if (value >= 0 && value < HOURS_PER_DAY) return Math.round(value * MINUTES_PER_HOUR);
+        return Math.round(value);
+    }
+    if (!value) return fallback;
+    const str = String(value).trim();
+    const hm = str.match(/^(\d{1,2}):(\d{2})$/);
+    if (hm) return (Number(hm[1]) * 60) + Number(hm[2]);
+    const d = new Date(str);
+    if (!Number.isNaN(d.getTime())) return d.getHours() * 60 + d.getMinutes();
+    return fallback;
+}
+
+function formatTime(totalMinutes) {
+    const m = ((Math.round(totalMinutes) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+    const h = String(Math.floor(m / 60)).padStart(2, '0');
+    const mm = String(m % 60).padStart(2, '0');
+    return `${h}:${mm}`;
+}
+
+function buildTeamMap(teams) {
+    const map = {};
+    (teams || []).forEach(t => { map[String(t.id)] = t; });
+    return map;
+}
+
+function calculateTable(teams, matches) {
+    const stats = {};
+    teams.forEach(t => {
+        stats[t.id] = { id: t.id, name: t.name, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
+    });
+    matches.forEach(m => {
+        const sh = parseInt(m.scoreH, 10);
+        const sa = parseInt(m.scoreA, 10);
+        if (Number.isNaN(sh) || Number.isNaN(sa)) return;
+        const home = stats[m.homeId];
+        const away = stats[m.awayId];
+        if (!home || !away) return;
+        home.played++; away.played++;
+        home.goalsFor += sh; home.goalsAgainst += sa;
+        away.goalsFor += sa; away.goalsAgainst += sh;
+        if (sh > sa) { home.won++; home.points += 3; away.lost++; }
+        else if (sh < sa) { away.won++; away.points += 3; home.lost++; }
+        else { home.drawn++; away.drawn++; home.points += 1; away.points += 1; }
+    });
+    return Object.values(stats).map(s => ({ ...s, diff: s.goalsFor - s.goalsAgainst }))
+        .sort((a, b) => b.points - a.points || b.diff - a.diff || b.goalsFor - a.goalsFor || a.name.localeCompare(b.name, 'de'));
+}
+
+function matchSort(a, b) {
+    const ra = Number(a.round) || 0, rb = Number(b.round) || 0;
+    if (ra !== rb) return ra - rb;
+    const fa = Number(a.field) || 0, fb = Number(b.field) || 0;
+    if (fa !== fb) return fa - fb;
+    return String(a.group || '').localeCompare(String(b.group || ''), 'de');
+}
+
+function hasValidScores(match) {
+    return match.scoreH !== '' && match.scoreH != null && match.scoreA !== '' && match.scoreA != null;
+}
+
+function groupRoundStartTimes(matches, startMinutes, matchMinutes, breakMinutes) {
+    const rounds = [...new Set(matches.map(m => Number(m.round)).filter(r => Number.isFinite(r)))].sort((a, b) => a - b);
+    const map = {};
+    rounds.forEach((r, idx) => { map[r] = startMinutes + idx * (matchMinutes + breakMinutes); });
+    return { map, rounds };
+}
+
+function renderLogo(slotId, src, fallbackText) {
+    const el = document.getElementById(slotId);
+    if (!src) { el.textContent = fallbackText; return; }
+    el.innerHTML = `<img src="${escHtml(src)}" alt="${escHtml(fallbackText)}">`;
+}
+
+function renderInfo(config, timings, p1Rounds, p2Rounds) {
+    const grid = document.getElementById('info-grid');
+    grid.innerHTML = '';
+    const entries = [
+        ['Turnier', config.tournamentName || 'TSV F-Jugend Turnier'],
+        ['Datum', config.tournamentDate || ''],
+        ['Start', formatTime(timings.startMinutes)],
+        ['Spielzeit', `${timings.matchMinutes} Min`],
+        ['Pause zwischen Spielen', `${timings.breakMinutes} Min`],
+        ['Pause nach Vorrunde', `${timings.breakAfterP1} Min`],
+        ['Felder Vorrunde', String(timings.fieldCountP1)],
+        ['Felder Hauptrunde', String(timings.fieldCountP2)],
+        ['Runden', `Vorrunde ${p1Rounds.length || 0} / Hauptrunde ${p2Rounds.length || 0}`]
+    ];
+    entries.forEach(([k, v]) => {
+        const box = document.createElement('div');
+        box.className = 'info-box';
+        box.innerHTML = `<strong>${escHtml(k)}</strong><br>${escHtml(v)}`;
+        grid.appendChild(box);
+    });
+}
+
+function renderParticipants(teamsByGroup) {
+    const root = document.getElementById('participants-p1');
+    root.innerHTML = '';
+    ['A', 'B', 'C', 'D'].forEach(g => {
+        const teams = teamsByGroup[g] || [];
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<table><thead><tr><th colspan="2">Gruppe ${escHtml(g)}</th></tr><tr><th>#</th><th>Team</th></tr></thead><tbody>${
+            teams.map((t, i) => `<tr><td class="center">${i + 1}</td><td>${escHtml(t.name)}</td></tr>`).join('') || '<tr><td colspan="2" class="center small">Keine Teams</td></tr>'
+        }</tbody></table>`;
+        root.appendChild(wrap);
+    });
+}
+
+function renderSchedule(containerId, matches, teamMap, roundStartMap, titlePrefix) {
+    const root = document.getElementById(containerId);
+    const sorted = (matches || []).slice().sort(matchSort);
+    if (!sorted.length) {
+        root.innerHTML = '<div class="small">Keine Spiele vorhanden.</div>';
+        return;
+    }
+    root.innerHTML = `<table><thead><tr><th>Nr.</th><th>Runde</th><th>Beginn</th><th>Feld</th><th>Gruppe</th><th>Spiel</th><th>Ergebnis</th></tr></thead><tbody>${
+        sorted.map((m, idx) => {
+            const h = teamMap[m.homeId] ? teamMap[m.homeId].name : m.homeId;
+            const a = teamMap[m.awayId] ? teamMap[m.awayId].name : m.awayId;
+            const score = hasValidScores(m) ? `${m.scoreH}:${m.scoreA}` : '—';
+            const start = roundStartMap[Number(m.round)];
+            return `<tr><td class="center">${idx + 1}</td><td>${escHtml(titlePrefix)} ${escHtml(m.round)}</td><td>${start != null ? formatTime(start) : '—'}</td><td class="center">F${escHtml(m.field)}</td><td class="center">${escHtml(m.group)}</td><td>${escHtml(h)} – ${escHtml(a)}</td><td class="center">${escHtml(score)}</td></tr>`;
+        }).join('')
+    }</tbody></table>`;
+}
+
+function renderTableCards(containerId, groups, groupLabelFn, teamsByGroup, matchesByGroup) {
+    const root = document.getElementById(containerId);
+    root.innerHTML = '';
+    groups.forEach(g => {
+        const tableRows = calculateTable(teamsByGroup[g] || [], matchesByGroup[g] || []);
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<table><thead><tr><th colspan="8">${escHtml(groupLabelFn(g))}</th></tr><tr><th>#</th><th>Team</th><th>Sp</th><th>G</th><th>U</th><th>V</th><th>Tore</th><th>Pkt</th></tr></thead><tbody>${
+            tableRows.map((r, idx) => `<tr><td class="center">${idx + 1}</td><td>${escHtml(r.name)}</td><td class="center">${r.played}</td><td class="center">${r.won}</td><td class="center">${r.drawn}</td><td class="center">${r.lost}</td><td class="center">${r.goalsFor}:${r.goalsAgainst}</td><td class="center">${r.points}</td></tr>`).join('')
+            || '<tr><td colspan="8" class="center small">Keine Daten</td></tr>'
+        }</tbody></table>`;
+        root.appendChild(wrap);
+    });
+}
+
+async function loadData() {
+    try {
+        const res = await fetch(API_URL + '?action=get_tournament_data');
+        const json = await res.json();
+        if (json.result !== 'success') throw new Error(json.message || 'Daten konnten nicht geladen werden');
+
+        const data = json.data || {};
+        const config = data.config || {};
+        const teams = data.teams || [];
+        const teamMap = buildTeamMap(teams);
+        const matchesP1 = (data.matchesP1 || []).slice();
+        const matchesP2 = (data.matchesP2 || []).slice();
+
+        const defaultStartMinutes = parseTimeToMinutes(DEFAULTS.startTime, 0);
+        const startMinutes = parseTimeToMinutes(config.startTime, defaultStartMinutes);
+        const timings = {
+            startMinutes,
+            matchMinutes: toNumber(config.matchMinutes, DEFAULTS.matchMinutes),
+            breakMinutes: toNumber(config.breakMinutes, DEFAULTS.breakMinutes),
+            breakAfterP1: toNumber(config.breakAfterP1, DEFAULTS.breakAfterP1),
+            fieldCountP1: toNumber(config.fieldCountP1, DEFAULTS.fieldCountP1),
+            fieldCountP2: toNumber(config.fieldCountP2, DEFAULTS.fieldCountP2)
+        };
+
+        const p1 = groupRoundStartTimes(matchesP1, timings.startMinutes, timings.matchMinutes, timings.breakMinutes);
+        const p1LastStart = p1.rounds.length ? p1.map[p1.rounds[p1.rounds.length - 1]] : timings.startMinutes;
+        const p2Start = p1LastStart + timings.matchMinutes + timings.breakAfterP1;
+        const p2 = groupRoundStartTimes(matchesP2, p2Start, timings.matchMinutes, timings.breakMinutes);
+
+        const teamsByP1Group = { A: [], B: [], C: [], D: [] };
+        teams.forEach(t => {
+            const g = String(t.gruppe || '').toUpperCase();
+            if (teamsByP1Group[g]) teamsByP1Group[g].push(t);
+        });
+
+        const p1MatchesByGroup = { A: [], B: [], C: [], D: [] };
+        matchesP1.forEach(m => {
+            const g = String(m.group || '').toUpperCase();
+            if (p1MatchesByGroup[g]) p1MatchesByGroup[g].push(m);
+        });
+
+        const p2MatchesByGroup = { '1': [], '2': [], '3': [], '4': [], '5': [] };
+        const p2TeamsByGroup = { '1': [], '2': [], '3': [], '4': [], '5': [] };
+        matchesP2.forEach(m => {
+            const g = String(m.group || '');
+            if (!p2MatchesByGroup[g]) return;
+            p2MatchesByGroup[g].push(m);
+            [m.homeId, m.awayId].forEach(id => {
+                if (!id || !teamMap[id]) return;
+                if (!p2TeamsByGroup[g].some(t => String(t.id) === String(id))) p2TeamsByGroup[g].push(teamMap[id]);
+            });
+        });
+
+        document.getElementById('tournament-title').textContent = config.tournamentName || 'TSV F-Jugend Turnier';
+        document.getElementById('tournament-subtitle').textContent = `Druckansicht • ${config.tournamentDate || ''}`;
+        document.title = `Druck / Export – ${config.tournamentName || 'Turnier'}`;
+        renderLogo('logo-left', config.logoClub, 'Vereinslogo');
+        renderLogo('logo-right', config.logoSponsor1 || config.logoSponsor2 || config.logoClub, 'Logo');
+
+        renderInfo(config, timings, p1.rounds, p2.rounds);
+        renderParticipants(teamsByP1Group);
+        renderSchedule('schedule-p1', matchesP1, teamMap, p1.map, 'R');
+        renderSchedule('schedule-p2', matchesP2, teamMap, p2.map, 'R');
+        renderTableCards('tables-p1', ['A', 'B', 'C', 'D'], g => `Vorrunde Gruppe ${g}`, teamsByP1Group, p1MatchesByGroup);
+        renderTableCards('tables-p2', ['1', '2', '3', '4', '5'], g => `Hauptrunde Gruppe ${g}`, p2TeamsByGroup, p2MatchesByGroup);
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById('print-root').innerHTML = `<div class="page"><h2>Fehler</h2><p>Turnierdaten konnten nicht geladen werden.</p><p class="small">${escHtml(err.message || String(err))}</p></div>`;
+    }
+}
+
+loadData();
+</script>
+</body>
+</html>
