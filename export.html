@@ -124,7 +124,7 @@ function toNumber(value, fallback) {
 
 function parseTimeToMinutes(value, fallback) {
     if (typeof value === 'number') {
-        if (value > 0 && value < 1) return Math.round(value * HOURS_PER_DAY * MINUTES_PER_HOUR);
+        if (value > 0 && value < 1) return Math.round(value * MINUTES_PER_DAY);
         if (value >= 0 && value < HOURS_PER_DAY) return Math.round(value * MINUTES_PER_HOUR);
         return Math.round(value);
     }
@@ -186,7 +186,7 @@ function hasValidScores(match) {
 }
 
 function groupRoundStartTimes(matches, startMinutes, matchMinutes, breakMinutes) {
-    const rounds = [...new Set(matches.map(m => Number(m.round)).filter(Number.isFinite))].sort((a, b) => a - b);
+    const rounds = [...new Set(matches.map(m => Number(m.round)).filter(r => Number.isFinite(r)))].sort((a, b) => a - b);
     const map = {};
     rounds.forEach((r, idx) => { map[r] = startMinutes + idx * (matchMinutes + breakMinutes); });
     return { map, rounds };
