@@ -100,6 +100,7 @@
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
+const MINUTES_PER_DAY = 24 * 60;
 const DEFAULTS = {
     startTime: '10:00',
     matchMinutes: 10,
@@ -135,7 +136,7 @@ function parseTimeToMinutes(value, fallback) {
 }
 
 function formatTime(totalMinutes) {
-    const m = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
+    const m = ((Math.round(totalMinutes) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
     const h = String(Math.floor(m / 60)).padStart(2, '0');
     const mm = String(m % 60).padStart(2, '0');
     return `${h}:${mm}`;
@@ -271,7 +272,8 @@ async function loadData() {
         const matchesP1 = (data.matchesP1 || []).slice();
         const matchesP2 = (data.matchesP2 || []).slice();
 
-        const startMinutes = parseTimeToMinutes(config.startTime, parseTimeToMinutes(DEFAULTS.startTime, 600));
+        const defaultStartMinutes = parseTimeToMinutes(DEFAULTS.startTime, 0);
+        const startMinutes = parseTimeToMinutes(config.startTime, defaultStartMinutes);
         const timings = {
             startMinutes,
             matchMinutes: toNumber(config.matchMinutes, DEFAULTS.matchMinutes),
