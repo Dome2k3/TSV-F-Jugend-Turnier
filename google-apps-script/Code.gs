@@ -578,12 +578,12 @@ function generateHauptrunde() {
     }
 
     // ── 5. Spielplan generieren ──────────────────────────────
-    function getPairsForSpieltag(groupNum, spieltag) {
+    function getGroupPairsForMatchday(groupNum, matchday) {
       var t = hauptrundeGroups[groupNum - 1];
       var pairs;
-      if (spieltag === 1) {
+      if (matchday === 1) {
         pairs = [[t[0], t[1]], [t[2], t[3]]];
-      } else if (spieltag === 2) {
+      } else if (matchday === 2) {
         pairs = [[t[0], t[2]], [t[1], t[3]]];
       } else {
         pairs = [[t[0], t[3]], [t[1], t[2]]];
@@ -592,12 +592,12 @@ function generateHauptrunde() {
     }
 
     var schedule = [];
-    for (var spieltag = 1; spieltag <= 3; spieltag++) {
+    for (var matchday = 1; matchday <= 3; matchday++) {
       for (var slot = 0; slot < 2; slot++) {
-        var round = 11 + ((spieltag - 1) * 2) + slot;
+        var round = 11 + ((matchday - 1) * 2) + slot;
         var games = [];
         for (var groupNum = 1; groupNum <= 5; groupNum++) {
-          var pairs = getPairsForSpieltag(groupNum, spieltag);
+          var pairs = getGroupPairsForMatchday(groupNum, matchday);
           var pair = pairs[slot];
           games.push({
             group: groupNum,

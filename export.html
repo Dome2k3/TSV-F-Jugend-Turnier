@@ -100,7 +100,9 @@
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbyF8KjKZQ9GAkRLjLkDJEMUby2hRVCV2kr3eQzdh7EobuGJM9jEzTBXmVzPQ6ODoY2Ggw/exec';
-const MINUTES_PER_DAY = 24 * 60;
+const HOURS_PER_DAY = 24;
+const MINUTES_PER_HOUR = 60;
+const MINUTES_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR;
 const DEFAULTS = {
     startTime: '10:00',
     matchMinutes: 10,
@@ -122,8 +124,8 @@ function toNumber(value, fallback) {
 
 function parseTimeToMinutes(value, fallback) {
     if (typeof value === 'number') {
-        if (value > 0 && value < 1) return Math.round(value * 24 * 60);
-        if (value >= 0 && value < 24) return Math.round(value * 60);
+        if (value > 0 && value < 1) return Math.round(value * HOURS_PER_DAY * MINUTES_PER_HOUR);
+        if (value >= 0 && value < HOURS_PER_DAY) return Math.round(value * MINUTES_PER_HOUR);
         return Math.round(value);
     }
     if (!value) return fallback;
@@ -177,6 +179,10 @@ function matchSort(a, b) {
     const fa = Number(a.field) || 0, fb = Number(b.field) || 0;
     if (fa !== fb) return fa - fb;
     return String(a.group || '').localeCompare(String(b.group || ''), 'de');
+}
+
+function hasValidScores(match) {
+    return match.scoreH !== '' && match.scoreH != null && match.scoreA !== '' && match.scoreA != null;
 }
 
 function groupRoundStartTimes(matches, startMinutes, matchMinutes, breakMinutes) {
@@ -238,7 +244,7 @@ function renderSchedule(containerId, matches, teamMap, roundStartMap, titlePrefi
         sorted.map((m, idx) => {
             const h = teamMap[m.homeId] ? teamMap[m.homeId].name : m.homeId;
             const a = teamMap[m.awayId] ? teamMap[m.awayId].name : m.awayId;
-            const score = (m.scoreH !== '' && m.scoreH != null && m.scoreA !== '' && m.scoreA != null) ? `${m.scoreH}:${m.scoreA}` : '—';
+            const score = hasValidScores(m) ? `${m.scoreH}:${m.scoreA}` : '—';
             const start = roundStartMap[Number(m.round)];
             return `<tr><td class="center">${idx + 1}</td><td>${escHtml(titlePrefix)} ${escHtml(m.round)}</td><td>${start != null ? formatTime(start) : '—'}</td><td class="center">F${escHtml(m.field)}</td><td class="center">${escHtml(m.group)}</td><td>${escHtml(h)} – ${escHtml(a)}</td><td class="center">${escHtml(score)}</td></tr>`;
         }).join('')
