@@ -280,6 +280,21 @@
             text-decoration: none;
         }
         .back-link:hover { color: var(--grass); }
+        .export-link {
+            display: inline-block;
+            margin-top: 12px;
+            margin-left: 10px;
+            color: #f39c12;
+            border: 1px solid rgba(243,156,18,0.45);
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .export-link:hover {
+            background: rgba(243,156,18,0.12);
+        }
 
         /* ── EMPTY STATE ── */
         .empty-state {
@@ -315,6 +330,7 @@
 
 <div style="text-align:center; padding: 8px 0 0;">
     <a href="index.html" class="back-link">← Zurück zur Anzeigetafel</a>
+    <a href="export.html" target="_blank" rel="noopener" class="export-link" title="Druckansicht in neuem Tab öffnen">🖨️ Druck / Export</a>
 </div>
 
 <div class="main-content">

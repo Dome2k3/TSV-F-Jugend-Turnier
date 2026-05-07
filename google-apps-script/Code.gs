@@ -420,15 +420,12 @@ function unclaimTask(params) {
  *   4 (Gelb)   – alle Viertplatzierten   aus A, B, C, D
  *   5 (Orange) – alle Fünftplatzierten   aus A, B, C, D
  *
- * Spielplan (Runden 11–18, 4 Felder):
- *   R11: Grp1 Spieltag1 (F1+2),  Grp2 Spieltag1 (F3+4)
- *   R12: Grp3 Spieltag1 (F1+2),  Grp4 Spieltag1 (F3+4)
- *   R13: Grp5 Spieltag1 (F1+2),  Grp1 Spieltag2 (F3+4)
- *   R14: Grp5 Spieltag2 (F1+2),  Grp2 Spieltag2 (F3+4)
- *   R15: Grp5 Spieltag3 (F1+2),  Grp3 Spieltag2 (F3+4)
- *   R16: Grp1 Spieltag3 (F1+2),  Grp4 Spieltag2 (F3+4)
- *   R17: Grp2 Spieltag3 (F1+2),  Grp3 Spieltag3 (F3+4)
- *   R18: Grp4 Spieltag3 (F1+2)   – nur 2 Felder belegt
+ * Spielplan (Runden 11–16, 5 Felder):
+ *   Jede Hauptrunden-Gruppe nutzt ein festes Feld (Gruppe 1→F1 ... Gruppe 5→F5).
+ *   Pro Spieltag gibt es 2 Slots (jeweils ein Spiel pro Gruppe), daher:
+ *   R11/R12 = Spieltag 1 Slot 1/2
+ *   R13/R14 = Spieltag 2 Slot 1/2
+ *   R15/R16 = Spieltag 3 Slot 1/2
  */
 function generateHauptrunde() {
   try {
@@ -581,7 +578,7 @@ function generateHauptrunde() {
     }
 
     // ── 5. Spielplan generieren ──────────────────────────────
-    function getGames(groupNum, spieltag, fieldOffset) {
+    function getPairsForSpieltag(groupNum, spieltag) {
       var t = hauptrundeGroups[groupNum - 1];
       var pairs;
       if (spieltag === 1) {
@@ -591,22 +588,27 @@ function generateHauptrunde() {
       } else {
         pairs = [[t[0], t[3]], [t[1], t[2]]];
       }
-      return [
-        { group: groupNum, homeId: pairs[0][0], awayId: pairs[0][1], field: fieldOffset + 1 },
-        { group: groupNum, homeId: pairs[1][0], awayId: pairs[1][1], field: fieldOffset + 2 }
-      ];
+      return pairs;
     }
 
-    var schedule = [
-      { round: 11, games: getGames(1,1,0).concat(getGames(2,1,2)) },
-      { round: 12, games: getGames(3,1,0).concat(getGames(4,1,2)) },
-      { round: 13, games: getGames(5,1,0).concat(getGames(1,2,2)) },
-      { round: 14, games: getGames(5,2,0).concat(getGames(2,2,2)) },
-      { round: 15, games: getGames(5,3,0).concat(getGames(3,2,2)) },
-      { round: 16, games: getGames(1,3,0).concat(getGames(4,2,2)) },
-      { round: 17, games: getGames(2,3,0).concat(getGames(3,3,2)) },
-      { round: 18, games: getGames(4,3,0) }
-    ];
+    var schedule = [];
+    for (var spieltag = 1; spieltag <= 3; spieltag++) {
+      for (var slot = 0; slot < 2; slot++) {
+        var round = 11 + ((spieltag - 1) * 2) + slot;
+        var games = [];
+        for (var groupNum = 1; groupNum <= 5; groupNum++) {
+          var pairs = getPairsForSpieltag(groupNum, spieltag);
+          var pair = pairs[slot];
+          games.push({
+            group: groupNum,
+            homeId: pair[0],
+            awayId: pair[1],
+            field: groupNum
+          });
+        }
+        schedule.push({ round: round, games: games });
+      }
+    }
 
     // ── 6. MatchesP2-Sheet befüllen ──────────────────────────
     var rows = [['group', 'round', 'field', 'homeId', 'awayId', 'scoreH', 'scoreA']];
