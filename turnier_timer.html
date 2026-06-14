@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F-Jugend Turnier-Timer</title>
+    <title>F-Jugend Turnier-Timer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes pulse-red {
@@ -15,20 +15,19 @@
         }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans min-height-screen flex flex-col justify-between p-6">
+<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between p-6">
 
     <!-- Top Bar / KPI -->
     <div class="flex justify-between items-center bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
-        <div>
-            <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Aktueller Status</p>
+        <div class="cursor-pointer group" onclick="incrementRound()" title="Klicken zum Erhöhen">
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold group-hover:text-emerald-400 transition">Runde (Klick +1)</p>
             <div class="flex items-center gap-3 mt-1">
-                <span id="roundLabel" class="text-3xl font-bold text-emerald-400">Runde 1</span>
-                <button onclick="changeRound()" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300 transition">Ändern</button>
+                <span id="roundLabel" class="text-4xl font-bold text-emerald-400 transition group-active:scale-95">Runde 1</span>
             </div>
         </div>
         <div class="text-right">
-            <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Plätze im Einsatz</p>
-            <p class="text-2xl font-bold text-white mt-1">Feld 1 - 4 aktiv</p>
+            <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Status</p>
+            <p id="systemStatus" class="text-2xl font-bold text-white mt-1">Bereit</p>
         </div>
     </div>
 
@@ -37,46 +36,44 @@
         <div id="timeDisplay" class="text-[12rem] font-black tracking-tighter tabular-nums leading-none drop-shadow-md">
             10:00
         </div>
-        <div id="statusMessage" class="text-2xl font-medium text-emerald-400 mt-4 tracking-wide uppercase">
+        <div id="statusMessage" class="text-2xl font-medium text-emerald-400 mt-4 tracking-wide uppercase text-center px-4">
             Bereit für den Anpfiff
         </div>
     </div>
 
-    <!-- Control Center / Settings -->
-    <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-6">
-        <!-- Timer Controls -->
+    <!-- Control Center -->
+    <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700 flex flex-col lg:flex-row justify-between items-center gap-6">
         <div class="flex gap-4">
-            <button id="startStopBtn" onclick="toggleTimer()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-8 py-4 rounded-xl text-xl shadow-lg transition-all active:scale-95">
+            <button id="startStopBtn" onclick="toggleTimer()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-10 py-5 rounded-xl text-2xl shadow-lg transition-all active:scale-95">
                 START
             </button>
-            <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-4 rounded-xl text-lg transition-all active:scale-95">
+            <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-5 rounded-xl text-xl transition-all active:scale-95">
                 Reset
             </button>
         </div>
 
         <!-- Settings -->
-        <div class="flex items-center gap-6 bg-slate-800/50 p-2 rounded-xl">
-            <div class="flex items-center gap-2">
-                <label class="text-sm font-medium text-slate-400">Spielzeit (Min):</label>
-                <input type="number" id="durationInput" value="10" min="1" max="60" class="w-16 bg-slate-700 text-white font-bold px-2 py-1 rounded text-center border border-slate-600 focus:outline-none focus:border-emerald-500">
+        <div class="flex flex-wrap items-center justify-center gap-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-slate-500 uppercase">Spielzeit (Min)</label>
+                <input type="number" id="durationInput" value="10" class="w-20 bg-slate-800 text-white font-bold px-3 py-2 rounded-lg border border-slate-600 focus:border-emerald-500 outline-none">
             </div>
-            <div class="flex items-center gap-2">
-                <label class="text-sm font-medium text-slate-400">Hype-Phase ab Minute:</label>
-                <input type="number" id="hypeInput" value="9" min="0" max="60" class="w-16 bg-slate-700 text-white font-bold px-2 py-1 rounded text-center border border-slate-600 focus:outline-none focus:border-emerald-500">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-slate-500 uppercase">Hype ab Minute X</label>
+                <input type="number" id="hypeInput" value="9" class="w-20 bg-slate-800 text-white font-bold px-3 py-2 rounded-lg border border-slate-600 focus:border-emerald-500 outline-none">
             </div>
-            <button onclick="applySettings()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+            <button onclick="applySettings()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-6 py-2 h-10 self-end rounded-lg transition shadow-md active:scale-95">
                 Übernehmen
             </button>
         </div>
     </div>
 
-    <!-- Ein kleiner dezenter Signal-Ton für dich am Laptop -->
     <audio id="alertBeep" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
 
     <script>
         let timer = null;
-        let totalSeconds = 600; // 10 Minuten Default
         let initialSeconds = 600;
+        let totalSeconds = 600;
         let isRunning = false;
         let currentRound = 1;
 
@@ -87,34 +84,41 @@
         const alertBeep = document.getElementById('alertBeep');
         const durationInput = document.getElementById('durationInput');
         const hypeInput = document.getElementById('hypeInput');
+        const systemStatus = document.getElementById('systemStatus');
 
         function updateDisplay() {
             let minutes = Math.floor(totalSeconds / 60);
             let seconds = totalSeconds % 60;
             timeDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-            let hypeMinuteTarget = parseInt(hypeInput.value);
-            let targetSecondsLeft = (initialSeconds - (hypeMinuteTarget * 60)); 
-            
-            // Wenn die eingestellte Hype-Minute erreicht ist (Standard: nach 9 Minuten = 60 Sek Restzeit)
-            if (totalSeconds <= targetSecondsLeft && totalSeconds > 0) {
+            let hypeStartMinute = parseInt(hypeInput.value);
+            // Hype startet, wenn die bereits vergangene Zeit >= hypeStartMinute ist
+            let elapsedSeconds = initialSeconds - totalSeconds;
+            let hypeStartSecondsThreshold = hypeStartMinute * 60;
+
+            if (totalSeconds > 0 && elapsedSeconds >= hypeStartSecondsThreshold) {
                 timerContainer.classList.add('animate-pulse-red');
-                statusMessage.innerText = "🚀 AUDIO JETZT STARTEN! (Major Tom läuft)";
-                statusMessage.classList.remove('text-emerald-400', 'text-sky-400');
-                statusMessage.classList.add('text-white', 'font-bold');
+                statusMessage.innerText = "🚀 AUDIO STARTEN! (Major Tom)";
+                statusMessage.className = "text-2xl font-black text-white mt-4 tracking-widest uppercase text-center";
                 
-                // Kurzer Piep-Ton genau beim Erreichen der Marke als Reminder
-                if (totalSeconds === targetSecondsLeft) {
+                // Sound-Logik: Nur beim exakten Erreichen der Hype-Sekunde starten und nach 2 Sek stoppen
+                if (elapsedSeconds === hypeStartSecondsThreshold) {
                     alertBeep.play();
+                    setTimeout(() => {
+                        alertBeep.pause();
+                        alertBeep.currentTime = 0;
+                    }, 2000);
                 }
             } else if (totalSeconds === 0) {
                 timerContainer.classList.remove('animate-pulse-red');
                 timerContainer.classList.add('bg-red-600');
-                statusMessage.innerText = "🏁 SPIEL BEENDET (Schlusspfiff)";
+                statusMessage.innerText = "🏁 SCHLUSSPFIFF";
+                systemStatus.innerText = "Beendet";
             } else {
                 timerContainer.classList.remove('animate-pulse-red', 'bg-red-600');
                 statusMessage.innerText = "Spiel läuft...";
-                statusMessage.classList.add('text-emerald-400');
+                statusMessage.className = "text-2xl font-medium text-emerald-400 mt-4 tracking-wide uppercase text-center";
+                systemStatus.innerText = "Aktiv";
             }
         }
 
@@ -122,8 +126,7 @@
             if (isRunning) {
                 clearInterval(timer);
                 startStopBtn.innerText = "START";
-                startStopBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-                startStopBtn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+                startStopBtn.className = "bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-10 py-5 rounded-xl text-2xl shadow-lg transition-all active:scale-95";
                 isRunning = false;
             } else {
                 timer = setInterval(() => {
@@ -137,8 +140,7 @@
                     }
                 }, 1000);
                 startStopBtn.innerText = "PAUSE";
-                startStopBtn.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
-                startStopBtn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                startStopBtn.className = "bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-10 py-5 rounded-xl text-2xl shadow-lg transition-all active:scale-95";
                 isRunning = true;
             }
         }
@@ -148,27 +150,23 @@
             isRunning = false;
             totalSeconds = initialSeconds;
             startStopBtn.innerText = "START";
-            startStopBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-            startStopBtn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
-            timerContainer.classList.remove('animate-pulse-red', 'bg-red-600');
-            statusMessage.innerText = "Bereit für den Anpfiff";
-            statusMessage.className = "text-2xl font-medium text-emerald-400 mt-4 tracking-wide uppercase";
+            startStopBtn.className = "bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-10 py-5 rounded-xl text-2xl shadow-lg transition-all active:scale-95";
+            systemStatus.innerText = "Bereit";
             updateDisplay();
         }
 
         function applySettings() {
-            let minutes = parseInt(durationInput.value);
-            initialSeconds = minutes * 60;
-            totalSeconds = initialSeconds;
+            initialSeconds = parseInt(durationInput.value) * 60;
             resetTimer();
         }
 
-        function changeRound() {
-            let newRound = prompt("Welche Runde soll angezeigt werden?", currentRound);
-            if (newRound != null && !isNaN(newRound) && newRound > 0) {
-                currentRound = parseInt(newRound);
-                document.getElementById('roundLabel').innerText = "Runde " + currentRound;
-            }
+        function incrementRound() {
+            currentRound++;
+            document.getElementById('roundLabel').innerText = "Runde " + currentRound;
+            // Kleiner optischer Feedback-Effekt beim Klicken
+            const lbl = document.getElementById('roundLabel');
+            lbl.classList.add('text-white');
+            setTimeout(() => lbl.classList.remove('text-white'), 200);
         }
 
         updateDisplay();
